@@ -464,8 +464,7 @@
         }
 
         .pane-info.pane-active {
-            border-color: #28a745;
-            background: var(--input-bg);
+            /* Active pane styling removed - now looks the same as inactive panes */
         }
 
         .pane-header {
@@ -500,6 +499,30 @@
             border-radius: 10px;
             font-size: 0.7rem;
             font-weight: 500;
+        }
+
+        .pane-selected-badge {
+            background: #007bff;
+            color: white;
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .pane-info.highlight {
+            animation: paneHighlight 0.6s ease-out;
+        }
+
+        @keyframes paneHighlight {
+            0% {
+                background-color: rgba(0, 123, 255, 0.08);
+                border-color: rgba(0, 123, 255, 0.3);
+            }
+            100% {
+                background-color: transparent;
+                border-color: var(--border-color);
+            }
         }
 
         .pane-details {
@@ -3284,12 +3307,25 @@
             `;
             
             if (window.panes && window.panes.length > 0) {
-                const panesListHtml = window.panes.map(pane => `
-                    <div class="pane-info ${pane.active ? 'pane-active' : ''}" onclick="streamPane('${currentSession.name}', ${window.index}, ${pane.index}, '${window.name}', ${pane.index}, '${pane.name || `Pane ${pane.index}`}')" style="cursor: pointer;">
+                const panesListHtml = window.panes.map(pane => {
+                    // Check if this pane is currently being streamed
+                    const isSelected = currentStream && 
+                        currentStream.session === currentSession.name && 
+                        currentStream.window === window.index && 
+                        currentStream.pane === pane.index;
+                    
+                    return `
+                    <div class="pane-info ${pane.active ? 'pane-active' : ''}" 
+                         data-session="${currentSession.name}" 
+                         data-window="${window.index}" 
+                         data-pane="${pane.index}"
+                         onclick="streamPane('${currentSession.name}', ${window.index}, ${pane.index}, '${window.name}', ${pane.index}, '${pane.name || `Pane ${pane.index}`}')" 
+                         style="cursor: pointer;">
                         <div class="pane-header">
                             <span class="pane-name">${pane.name || `Pane ${pane.index}`}</span>
                             <div class="pane-controls">
                                 ${pane.active ? '<span class="pane-active-badge">Active</span>' : ''}
+                                ${isSelected ? '<span class="pane-selected-badge">Selected</span>' : ''}
                                 <span class="pane-stream-hint">Click to stream</span>
                                 ${!pane.active ? `<button class="btn btn-primary btn-sm" onclick="activatePane('${currentSession.name}', ${window.index}, ${pane.index}, event)" title="Activate this pane" style="margin-left: 8px; padding: 2px 6px; font-size: 0.7rem;">
                                     Activate
@@ -3334,7 +3370,8 @@
                             </div>
                         </div>
                     </div>
-                `).join('');
+                `;
+                }).join('');
                 
                 windowHtml += `
                     <div class="panes-section">
@@ -3470,6 +3507,29 @@
             
             // Update command display immediately
             updateStreamCommand();
+            
+            // Refresh pane display to show "Selected" badge
+            if (currentSession) {
+                showSelectedWindow();
+                
+                // Scroll the selected pane into view after a short delay to ensure DOM is updated
+                setTimeout(() => {
+                    const selectedPane = document.querySelector(`[data-session="${sessionName}"][data-window="${windowIndex}"][data-pane="${paneIndex}"]`);
+                    if (selectedPane) {
+                        selectedPane.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'center',
+                            inline: 'nearest'
+                        });
+                        
+                        // Add highlight effect
+                        selectedPane.classList.add('highlight');
+                        setTimeout(() => {
+                            selectedPane.classList.remove('highlight');
+                        }, 600);
+                    }
+                }, 100);
+            }
         }
 
         // Debounce function to prevent too frequent updates
@@ -3766,6 +3826,11 @@
             // Reset stream state
             currentStream = null;
             isStreamPaused = false;
+            
+            // Refresh pane display to remove "Selected" badge
+            if (currentSession) {
+                showSelectedWindow();
+            }
         }
 
         // Close all panels
