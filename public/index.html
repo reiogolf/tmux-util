@@ -1616,14 +1616,17 @@
                             <option value="">Choose a window...</option>
                         </select>
                         <div class="window-controls" id="windowControlsRow" style="display: none;">
-                            <button class="btn btn-primary btn-sm" onclick="createNewWindow(currentSession?.name)" title="Create new window">
-                                New Window
+                            <button class="btn btn-primary btn-sm" id="activateWindowBtn" onclick="activateCurrentWindow(currentSession?.name)" title="Activate selected window" style="display: none;">
+                                Activate
                             </button>
                             <button class="btn btn-secondary btn-sm" onclick="renameCurrentWindow(currentSession?.name)" title="Rename current window">
                                 Rename
                             </button>
                             <button class="btn btn-danger btn-sm" onclick="killCurrentWindow(currentSession?.name)" title="Kill current window">
                                 Kill
+                            </button>
+                            <button class="btn btn-primary btn-sm" onclick="createNewWindow(currentSession?.name)" title="Create new window">
+                                New Window
                             </button>
                         </div>
                     </div>
@@ -1667,6 +1670,7 @@
         let currentStream = null;
         let streamEventSource = null;
         let isStreamPaused = false;
+        let lastSelectedWindows = {}; // Track last selected window per session
 
         // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
@@ -2033,18 +2037,34 @@
             const windowControlsRow = document.getElementById('windowControlsRow');
             
             if (currentSession.windows_info && currentSession.windows_info.length > 0) {
+                // Determine which window to select by default
+                let defaultWindowIndex = null;
+                
+                // If we have a last selected window for this session, try to use it
+                if (lastSelectedWindows[currentSession.name]) {
+                    const lastWindow = currentSession.windows_info.find(w => w.index === lastSelectedWindows[currentSession.name]);
+                    if (lastWindow) {
+                        defaultWindowIndex = lastSelectedWindows[currentSession.name];
+                    }
+                }
+                
+                // If no last selected window or it's not available, default to first window
+                if (defaultWindowIndex === null && currentSession.windows_info.length > 0) {
+                    defaultWindowIndex = currentSession.windows_info[0].index;
+                }
+                
                 // Populate dropdown options
                 windowSelect.innerHTML = `
                     <option value="">Choose a window...</option>
-                    ${currentSession.windows_info.map((window, index) => `
-                        <option value="${window.index}" ${index === 0 ? 'selected' : ''}>Window ${window.index}: ${window.name}${window.active ? ' (Active)' : ''}</option>
+                    ${currentSession.windows_info.map((window) => `
+                        <option value="${window.index}" ${window.index === defaultWindowIndex ? 'selected' : ''}>Window ${window.index}: ${window.name}${window.active ? ' (Active)' : ''}</option>
                     `).join('')}
                 `;
                 
                 // Show the dropdown container
                 windowDropdownContainer.style.display = 'block';
                 
-                // Auto-select first window if available
+                // Auto-select the default window if available
                 setTimeout(() => {
                     showSelectedWindow();
                 }, 100); // Small delay to ensure DOM is ready
@@ -2089,6 +2109,11 @@
             
             const selectedWindowIndex = parseInt(select.value);
             
+            // Track the last selected window for this session
+            if (!isNaN(selectedWindowIndex)) {
+                lastSelectedWindows[currentSession.name] = selectedWindowIndex;
+            }
+            
             if (isNaN(selectedWindowIndex)) {
                 content.innerHTML = '<p class="no-window-selected">Select a window from the dropdown in the header to view its panes.</p>';
                 
@@ -2109,8 +2134,18 @@
             
             // Show window controls when a window is selected
             const windowControlsRow = document.getElementById('windowControlsRow');
+            const activateWindowBtn = document.getElementById('activateWindowBtn');
             
             if (windowControlsRow) windowControlsRow.style.display = 'flex';
+            
+            // Show/hide activate button based on whether window is already active
+            if (activateWindowBtn) {
+                if (window.active) {
+                    activateWindowBtn.style.display = 'none';
+                } else {
+                    activateWindowBtn.style.display = 'inline-block';
+                }
+            }
             
             // Generate window content directly without making another API call
             let windowHtml = `
@@ -2833,12 +2868,63 @@
                 
                 if (data.success) {
                     showSuccess('Window killed successfully');
-                    getSessionInfo(sessionName);
+                    
+                    // Check if this was the last window in the session
+                    if (currentSession.windows_info.length === 1) {
+                        // This was the last window, session will be deleted
+                        showSuccess('Last window killed - session deleted');
+                        closeRightPanel();
+                        // Refresh the sessions list to remove the deleted session
+                        loadSessions();
+                    } else {
+                        // Still have other windows, refresh session info
+                        getSessionInfo(sessionName);
+                    }
                 } else {
                     showError('Failed to kill window: ' + (data.error || 'Unknown error'));
                 }
             } catch (error) {
                 showError('Failed to kill window: ' + error.message);
+            }
+        }
+
+        async function activateCurrentWindow(sessionName) {
+            const select = document.getElementById('windowSelect');
+            if (!select || select.value === '') {
+                showError('Please select a window first');
+                return;
+            }
+            
+            const windowIndex = parseInt(select.value);
+            const currentWindow = currentSession.windows_info.find(w => w.index === windowIndex);
+            
+            if (!currentWindow) {
+                showError('Window not found');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/tmux/command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session: sessionName,
+                        command: `select-window -t ${sessionName}:${windowIndex}`
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(`Window "${currentWindow.name}" activated successfully`);
+                    getSessionInfo(sessionName);
+                } else {
+                    showError('Failed to activate window: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                showError('Failed to activate window: ' + error.message);
             }
         }
 
