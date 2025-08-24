@@ -1400,9 +1400,9 @@
         }
 
         .stream-header {
-            background: #f8f9fa;
+            background: var(--input-bg);
             padding: 8px 15px;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid var(--input-border);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -1411,7 +1411,7 @@
         .stream-title {
             font-size: 0.95rem;
             font-weight: 600;
-            color: #2c3e50;
+            color: var(--text-primary);
         }
 
         .stream-controls {
@@ -1430,7 +1430,7 @@
             border: none;
             font-size: 1.5rem;
             cursor: pointer;
-            color: #6c757d;
+            color: var(--text-muted);
             padding: 0;
             width: 30px;
             height: 30px;
@@ -1442,8 +1442,8 @@
         }
 
         .close-stream:hover {
-            background: #e9ecef;
-            color: #495057;
+            background: var(--border-light);
+            color: var(--text-primary);
         }
 
         .stream-content {
@@ -1454,11 +1454,11 @@
         }
 
         .stream-info {
-            background: #e9ecef;
+            background: var(--input-bg);
             padding: 6px 12px;
-            border-bottom: 1px solid #dee2e6;
+            border-bottom: 1px solid var(--input-border);
             font-size: 0.8rem;
-            color: #495057;
+            color: var(--text-primary);
         }
         
         .stream-info-content {
@@ -1479,7 +1479,7 @@
         
         .stream-location {
             font-weight: 500;
-            color: #2c3e50;
+            color: var(--text-primary);
             font-family: 'Courier New', monospace;
             font-size: 0.85rem;
         }
@@ -1489,7 +1489,7 @@
             align-items: center;
             gap: 12px;
             font-size: 0.75rem;
-            color: #6c757d;
+            color: var(--text-muted);
         }
         
         .stream-update-time {
