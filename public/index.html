@@ -1,0 +1,3088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tmux-util - Session Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            transition: padding-right 0.3s ease;
+        }
+
+        body.right-panel-open {
+            padding-right: 42%;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header h1 {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header p {
+            color: #64748b;
+            font-size: 0.95rem;
+            margin: 0;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .status-item:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+        }
+
+        .status-indicator.error {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #5a6268 0%, #343a40 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.3);
+        }
+
+        .sessions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .session-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .session-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        .session-card.attached {
+            border-color: rgba(40, 167, 69, 0.3);
+            background: rgba(248, 255, 249, 0.95);
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .session-name-section {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .session-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .session-original-name {
+            font-size: 0.8rem;
+            color: #6c757d;
+            font-family: monospace;
+        }
+
+        .session-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .session-status.attached {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .session-status.detached {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .session-details {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .session-details div {
+            margin-bottom: 5px;
+        }
+
+        .active-window {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #e9ecef;
+        }
+
+
+
+        .session-stats {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #f8f9fa;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+        
+        .actions .btn {
+            flex: 1;
+            min-width: 0;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .command-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .command-text {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: #495057;
+            word-break: break-all;
+            white-space: pre-wrap;
+            max-width: 100%;
+            overflow-wrap: break-word;
+            flex: 1;
+        }
+
+        .window-info {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 6px;
+        }
+
+
+
+
+
+        .panes-section {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .panes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .panes-title {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        .view-toggle {
+            display: flex;
+            align-items: center;
+        }
+
+        .view-toggle .btn {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+        }
+
+
+
+        .panes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+
+
+        .pane-info {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .pane-info.pane-active {
+            border-color: #28a745;
+            background: #f8fff9;
+        }
+
+        .pane-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .pane-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pane-stream-hint {
+            font-size: 0.7rem;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .pane-name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .pane-active-badge {
+            background: #28a745;
+            color: white;
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .pane-details {
+            font-size: 0.85rem;
+        }
+
+        .pane-details > div {
+            margin-bottom: 3px;
+        }
+
+        .pane-details > div:last-child {
+            margin-bottom: 0;
+        }
+
+        .pane-details .pane-command,
+        .pane-details .pane-path,
+        .pane-details .pane-pid {
+            margin-bottom: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .pane-details .pane-command strong,
+        .pane-details .pane-path strong,
+        .pane-details .pane-pid strong {
+            margin-bottom: 4px;
+            color: #495057;
+            font-size: 0.9rem;
+        }
+
+        .pane-details .pane-command .command-text {
+            display: block;
+            margin-top: 3px;
+            padding: 6px 8px;
+            background: #f1f3f4;
+            border-left: 3px solid #667eea;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .path-text {
+            font-family: 'Courier New', monospace;
+            background: #e9ecef;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #495057;
+            word-break: break-all;
+            display: block;
+            margin-top: 3px;
+        }
+
+        .pid-text {
+            font-family: 'Courier New', monospace;
+            background: #e3f2fd;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #1976d2;
+            display: block;
+            margin-top: 3px;
+        }
+
+        .actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            border: 2px dashed rgba(0, 0, 0, 0.1);
+        }
+
+        .error {
+            background: rgba(220, 53, 69, 0.1);
+            color: #721c24;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(220, 53, 69, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .success {
+            background: rgba(40, 167, 69, 0.1);
+            color: #155724;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(40, 167, 69, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #667eea;
+            transition: all 0.3s ease;
+            padding: 0.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: scale(1.1);
+        }
+
+        .refresh-btn {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #667eea;
+            transition: all 0.3s ease;
+            padding: 0.5rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+        }
+
+        .refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: rotate(180deg) translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            color: #5a6fd8;
+        }
+
+        /* Session Details Panel */
+        .details-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 3px solid #667eea;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+            transform: translateY(100%);
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            z-index: 1000;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+
+        .details-panel.open {
+            transform: translateY(0);
+        }
+
+        .details-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            flex: 1;
+        }
+
+        .header-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-and-names {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .name-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .name-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .name-value {
+            font-family: monospace;
+            color: #2c3e50;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .window-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .window-dropdown-container {
+            flex-shrink: 0;
+        }
+
+        .window-controls, .pane-controls {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .window-controls .btn, .pane-controls .btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+
+
+        .details-status {
+            margin: 0;
+        }
+
+        .session-name-header {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+
+        .session-id-header {
+            font-size: 0.8rem;
+            color: #6c757d;
+            font-family: monospace;
+        }
+
+        .session-meta {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+
+        .meta-item {
+            margin-bottom: 2px;
+        }
+
+        .meta-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .close-details {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6c757d;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .close-details:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .details-content {
+            padding: 15px;
+            overflow-y: auto;
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .right-panel         .details-content {
+            max-height: calc(100vh - 60px);
+            transition: max-height 0.3s ease;
+            padding-bottom: 20px;
+        }
+
+        .right-panel.stream-panel-open .details-content {
+            max-height: calc(60vh - 80px);
+            padding-bottom: 60px;
+            margin-bottom: 40%;
+        }
+
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+            border-bottom: 1px solid #f8f9fa;
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .detail-value {
+            color: #2c3e50;
+            text-align: right;
+            flex: 1;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .window-dropdown {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+            margin: 0;
+        }
+        
+        .window-dropdown:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+        
+        .selected-window-content {
+            margin-top: 0;
+        }
+        
+        .no-window-selected {
+            color: #666;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px dashed #ddd;
+        }
+        
+        .no-panes {
+            color: #666;
+            font-style: italic;
+            text-align: center;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .detail-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .detail-status.attached {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .detail-status.detached {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 999;
+        }
+
+        .overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Right Details Panel */
+        .right-panel {
+            position: fixed;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 40%;
+            background: white;
+            border-left: 3px solid #667eea;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.1);
+            transform: translateX(100%);
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-panel.open {
+            transform: translateX(0);
+        }
+
+        /* Stream Panel (nested in right panel) */
+        .stream-panel {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 40%;
+            background: #1e1e1e;
+            border-top: 2px solid #667eea;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .stream-panel.open {
+            transform: translateY(0);
+        }
+
+        /* Quick Actions Panel */
+        .quick-actions {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1002;
+            display: none;
+        }
+
+        .quick-actions.open {
+            display: block;
+        }
+
+        .quick-actions .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .quick-actions .action-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .quick-actions .action-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .quick-actions .action-btn.secondary {
+            background: #6c757d;
+        }
+
+        .quick-actions .action-btn.secondary:hover {
+            background: #5a6268;
+        }
+
+        .quick-actions .action-btn.danger {
+            background: #dc3545;
+        }
+
+        .quick-actions .action-btn.danger:hover {
+            background: #c82333;
+        }
+
+        /* Panel Status Indicator */
+        .panel-status {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1003;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            display: none;
+        }
+
+        .panel-status.show {
+            display: block;
+        }
+
+        /* Create Session Button */
+        .create-session-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            text-decoration: none;
+            min-width: 140px;
+            justify-content: center;
+        }
+
+        .create-session-btn:hover {
+            background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .create-session-btn span {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        /* Prominent Create Session Section */
+        .create-session-section {
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(32, 201, 151, 0.1) 100%);
+            border: 2px dashed rgba(40, 167, 69, 0.3);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .create-session-section:hover {
+            border-color: rgba(40, 167, 69, 0.5);
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.15) 0%, rgba(32, 201, 151, 0.15) 100%);
+        }
+
+        .create-session-section h3 {
+            color: #155724;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .create-session-section p {
+            color: #6c757d;
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+
+        .create-session-prominent {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 16px 32px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .create-session-prominent:hover {
+            background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+        }
+
+        .create-session-prominent span {
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+
+        /* Window and Pane Management Styles */
+        .window-management {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+
+        .window-management h4 {
+            display: none;
+        }
+
+        .window-actions {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+
+        .window-actions .btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .pane-management {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+
+        .pane-management h4 {
+            display: none;
+        }
+
+        .pane-actions {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+
+        .pane-actions .btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 20px 20px 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.2rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6c757d;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 0 20px 20px 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .stream-header {
+            background: #f8f9fa;
+            padding: 8px 15px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stream-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .stream-controls {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+        }
+
+        .close-stream {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6c757d;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .close-stream:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .stream-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .stream-info {
+            background: #e9ecef;
+            padding: 6px 12px;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 0.8rem;
+            color: #495057;
+        }
+        
+        .stream-info-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .stream-info-main {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .stream-location {
+            font-weight: 500;
+            color: #2c3e50;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+        
+        .stream-info-details {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+        
+        .stream-update-time {
+            white-space: nowrap;
+        }
+        
+        .stream-connection-status {
+            background: #28a745;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+        
+        .copy-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            margin-left: 6px;
+            transition: background-color 0.2s ease;
+            font-family: monospace;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10000;
+            font-size: 0.9rem;
+            max-width: 300px;
+            word-wrap: break-word;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin-left: 12px;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .notification .close-btn:hover {
+            opacity: 0.8;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+        
+        .copy-btn:hover {
+            background: #5a6268;
+        }
+        
+        .copy-btn:active {
+            background: #495057;
+        }
+        
+        .copyable-text {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .stream-command {
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            color: #495057;
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .stream-output {
+            flex: 1;
+            background: #1e1e1e;
+            color: #f8f8f2;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            padding: 15px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+
+        .stream-output::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .stream-output::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+
+        .stream-output::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+
+        .stream-output::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+
+        .stream-status {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .stream-status.connected {
+            background: #28a745;
+        }
+
+        .stream-status.disconnected {
+            background: #dc3545;
+        }
+
+        .stream-status.paused {
+            background: #ffc107;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem 1.5rem;
+            }
+            
+            .header h1 {
+                font-size: 1.6rem;
+            }
+            
+            .header p {
+                font-size: 0.85rem;
+            }
+            
+            .header-actions {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: flex-end;
+            }
+            
+            .status-item {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.8rem;
+            }
+            
+            .create-session-btn {
+                min-width: auto;
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+            
+            .refresh-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
+            
+            .sessions-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .status-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .details-panel {
+                max-height: 70vh;
+            }
+
+            .detail-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+
+            .detail-value {
+                text-align: left;
+            }
+
+            .stream-panel {
+                width: 100%;
+                height: 50%;
+                bottom: 0;
+                transform: translateY(100%);
+            }
+
+            .stream-panel.open {
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="notificationContainer"></div>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>tmux-util</h1>
+                <p>Session Manager</p>
+            </div>
+            <div class="header-actions">
+                <div class="status-item">
+                    <span id="sessionCount">Loading sessions...</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-indicator" id="serviceStatus"></div>
+                    <span id="serviceStatusText">Checking service status...</span>
+                </div>
+
+                <button class="create-session-btn" onclick="openCreateSessionModal()" title="Create New Session">
+                    <span>➕</span>
+                    Create Session
+                </button>
+                <button class="refresh-btn" onclick="loadSessions()" title="Refresh sessions">
+                    🔄
+                </button>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Messages -->
+            <div id="messages"></div>
+
+            <!-- Prominent Create Session Section (shown when no sessions) -->
+            <div class="create-session-section" id="createSessionProminent" style="display: none;">
+                <h3>🚀 Get Started with tmux-util</h3>
+                <p>Create your first tmux session to start managing your terminal workflows efficiently.</p>
+                <button class="create-session-prominent" onclick="openCreateSessionModal()">
+                    <span>➕</span>
+                    Create Your First Session
+                </button>
+            </div>
+
+            <!-- Sessions Section -->
+            <div class="section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2>Active Sessions</h2>
+                    <button class="btn btn-primary" onclick="openCreateSessionModal()" style="display: flex; align-items: center; gap: 8px;">
+                        <span>➕</span>
+                        New Session
+                    </button>
+                </div>
+                <div id="sessionsContainer">
+                    <div class="loading">Loading sessions...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Panel Status Indicator -->
+    <div class="panel-status" id="panelStatus">
+        Panels are open - Use Quick Actions to manage
+    </div>
+
+    <!-- Create Session Modal -->
+    <div class="modal" id="createSessionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Session</h3>
+                <button class="modal-close" onclick="closeCreateSessionModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="modalSessionName">Session Name:</label>
+                    <input type="text" id="modalSessionName" class="form-control" placeholder="Enter session name">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCreateSessionModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="createSessionFromModal()">Create Session</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Panel -->
+    <div class="quick-actions" id="quickActions">
+        <div class="action-buttons">
+            <button class="action-btn secondary" onclick="closeAllPanels()">Close All</button>
+            <button class="action-btn" onclick="minimizePanels()">Minimize</button>
+        </div>
+    </div>
+
+    <!-- Right Details Panel -->
+    <div class="right-panel" id="rightPanel">
+        <div class="details-header">
+            <div class="header-content">
+                <!-- Row 1: Names and Status -->
+                <div class="header-row">
+                    <div class="status-and-names">
+                        <div class="name-section">
+                            <div class="name-item" id="friendlyNameContainer" style="display: none;">
+                                <span class="name-value" id="rightPanelSessionId"></span>
+                                <button class="copy-btn" onclick="copyToClipboard(document.getElementById('rightPanelSessionId').textContent, event)" title="Copy friendly name">Copy</button>
+                            </div>
+                            <div class="name-item">
+                                <span class="name-value" id="rightPanelTitle"></span>
+                                <button class="copy-btn" onclick="copyToClipboard(document.getElementById('rightPanelTitle').textContent, event)" title="Copy name">Copy</button>
+                            </div>
+                        </div>
+                        <div class="details-status" id="rightPanelStatus"></div>
+                    </div>
+                </div>
+                
+                <!-- Row 3: Created and Uptime -->
+                <div class="header-row">
+                    <div class="session-meta" id="rightPanelMeta"></div>
+                </div>
+                
+                <!-- Row 4: Window Dropdown and Controls -->
+                <div class="header-row" id="windowDropdownContainer" style="display: none;">
+                    <div class="window-section">
+                        <select id="windowSelect" onchange="showSelectedWindow()" class="window-dropdown" style="background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 6px; padding: 8px 12px; font-size: 0.9rem; color: #2c3e50; backdrop-filter: blur(10px); min-width: 200px;">
+                            <option value="">Choose a window...</option>
+                        </select>
+                        <div class="window-controls" id="windowControlsRow" style="display: none;">
+                            <button class="btn btn-primary btn-sm" onclick="createNewWindow(currentSession?.name)" title="Create new window">
+                                New Window
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="renameCurrentWindow(currentSession?.name)" title="Rename current window">
+                                Rename
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="killCurrentWindow(currentSession?.name)" title="Kill current window">
+                                Kill
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+
+            </div>
+            <button class="close-details" onclick="closeRightPanel()">×</button>
+        </div>
+        <div class="details-content" id="rightPanelContent">
+            <!-- Details content will be populated here -->
+        </div>
+        
+        <!-- Stream Panel (nested in right panel) -->
+        <div class="stream-panel" id="streamPanel">
+            <div class="stream-header">
+                <div class="stream-title" id="streamTitle">Pane Stream</div>
+                <div class="stream-controls">
+                    <button class="btn btn-sm btn-secondary" onclick="toggleStream()" id="toggleStreamBtn">Pause</button>
+                    <button class="btn btn-sm btn-secondary" onclick="refreshStream()" id="refreshStreamBtn">Refresh</button>
+                    <button class="close-stream" onclick="closeStreamPanel()">×</button>
+                </div>
+            </div>
+            <div class="stream-content">
+                <div class="stream-info" id="streamInfo">
+                    <!-- Stream info will be populated here -->
+                </div>
+                <div class="stream-output" id="streamOutput">
+                    <!-- Stream content will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        console.log('API_BASE:', API_BASE);
+        console.log('Current URL:', window.location.href);
+        let sessions = [];
+        let currentSession = null;
+        let currentStream = null;
+        let streamEventSource = null;
+        let isStreamPaused = false;
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            checkServiceStatus();
+            loadSessions();
+            
+            // Add keyboard support for closing panels
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    closeTopPanel();
+                }
+            });
+            
+            // Add scroll event handling for context-aware scrolling
+            setupScrollHandling();
+        });
+
+        // Setup scroll handling for context-aware scrolling
+        function setupScrollHandling() {
+            const detailsContent = document.getElementById('rightPanelContent');
+            const streamContent = document.getElementById('streamOutput');
+            
+            // Handle scroll events on details content
+            if (detailsContent) {
+                detailsContent.addEventListener('wheel', function(event) {
+                    const element = event.currentTarget;
+                    const scrollTop = element.scrollTop;
+                    const scrollHeight = element.scrollHeight;
+                    const clientHeight = element.clientHeight;
+                    
+                    // Check if we're at the top or bottom of the scrollable area
+                    const isAtTop = scrollTop === 0;
+                    const isAtBottom = scrollTop + clientHeight >= scrollHeight;
+                    
+                    // If scrolling up at the top or down at the bottom, prevent default
+                    // to allow the scroll to bubble up to the main page
+                    if ((event.deltaY < 0 && isAtTop) || (event.deltaY > 0 && isAtBottom)) {
+                        event.preventDefault();
+                        // Let the scroll event bubble up to the main page
+                        return;
+                    }
+                    
+                    // Otherwise, let the panel handle the scroll
+                    event.stopPropagation();
+                });
+            }
+            
+            // Handle scroll events on stream content
+            if (streamContent) {
+                streamContent.addEventListener('wheel', function(event) {
+                    const element = event.currentTarget;
+                    const scrollTop = element.scrollTop;
+                    const scrollHeight = element.scrollHeight;
+                    const clientHeight = element.clientHeight;
+                    
+                    // Check if we're at the top or bottom of the scrollable area
+                    const isAtTop = scrollTop === 0;
+                    const isAtBottom = scrollTop + clientHeight >= scrollHeight;
+                    
+                    // If scrolling up at the top or down at the bottom, prevent default
+                    // to allow the scroll to bubble up to the main page
+                    if ((event.deltaY < 0 && isAtTop) || (event.deltaY > 0 && isAtBottom)) {
+                        event.preventDefault();
+                        // Let the scroll event bubble up to the main page
+                        return;
+                    }
+                    
+                    // Otherwise, let the panel handle the scroll
+                    event.stopPropagation();
+                });
+            }
+        }
+
+        // Check service status
+        async function checkServiceStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                const statusIndicator = document.getElementById('serviceStatus');
+                const statusText = document.getElementById('serviceStatusText');
+                
+                if (response.ok) {
+                    statusIndicator.className = 'status-indicator';
+                    statusText.textContent = `Service healthy (uptime: ${Math.round(data.uptime)}s)`;
+                } else {
+                    throw new Error('Service unhealthy');
+                }
+            } catch (error) {
+                const statusIndicator = document.getElementById('serviceStatus');
+                const statusText = document.getElementById('serviceStatusText');
+                
+                statusIndicator.className = 'status-indicator error';
+                statusText.textContent = 'Service unavailable';
+            }
+        }
+
+        // Load all sessions
+        async function loadSessions() {
+            try {
+                const response = await fetch(`${API_BASE}/tmux/sessions`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    sessions = data.sessions;
+                    displaySessions();
+                    updateSessionCount();
+                } else {
+                    showError('Failed to load sessions: ' + data.error);
+                }
+            } catch (error) {
+                showError('Failed to connect to service: ' + error.message);
+            }
+        }
+
+        // Display sessions in the UI
+        function displaySessions() {
+            const container = document.getElementById('sessionsContainer');
+            const prominentSection = document.getElementById('createSessionProminent');
+            
+            if (sessions.length === 0) {
+                container.innerHTML = '<div class="loading">No active sessions found</div>';
+                prominentSection.style.display = 'block';
+                return;
+            }
+
+            prominentSection.style.display = 'none';
+            const sessionsHTML = sessions.map(session => `
+                <div class="session-card ${session.attached ? 'attached' : ''}">
+                    <div class="session-header">
+                        <div class="session-name-section">
+                            <div class="session-name">
+                                ${session.friendly_name || session.name}
+                                <button class="copy-btn" onclick="copyToClipboard('${session.friendly_name || session.name}', event)" title="Copy session name">Copy</button>
+                            </div>
+                            ${session.friendly_name ? `<div class="session-original-name">${session.name} <button class="copy-btn" onclick="copyToClipboard('${session.name}', event)" title="Copy session ID">Copy</button></div>` : ''}
+                        </div>
+                        <div class="session-status ${session.attached ? 'attached' : 'detached'}">
+                            ${session.attached ? 'Attached' : 'Detached'}
+                        </div>
+                    </div>
+                    <div class="session-details">
+                        <div>Windows: ${session.windows}</div>
+                        <div>Created: ${new Date(session.created).toLocaleString()}</div>
+                        ${session.active_window ? `
+                        <div class="active-window">
+                            <strong>Active Window:</strong> ${session.active_window.name}
+                        </div>
+                        ` : ''}
+
+                        <div class="session-stats">
+                            <small>Click "Details" to see pane information</small>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <button class="btn btn-secondary" onclick="editFriendlyName('${session.name}', '${session.friendly_name || ''}')">
+                            ${session.friendly_name ? 'Edit Name' : 'Add Name'}
+                        </button>
+                        <button class="btn btn-danger" onclick="killSession('${session.name}')">
+                            Kill Session
+                        </button>
+                        <button class="btn btn-primary" onclick="openDetailsPanel('${session.name}')">
+                            Details
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = `<div class="sessions-grid">${sessionsHTML}</div>`;
+            
+
+        }
+
+        // Update session count
+        function updateSessionCount() {
+            const countElement = document.getElementById('sessionCount');
+            countElement.textContent = `${sessions.length} session(s)`;
+        }
+
+
+
+        // Open create session modal
+        function openCreateSessionModal() {
+            const modal = document.getElementById('createSessionModal');
+            const input = document.getElementById('modalSessionName');
+            
+            modal.classList.add('show');
+            input.focus();
+            
+            // Add escape key listener
+            const escapeHandler = function(event) {
+                if (event.key === 'Escape') {
+                    closeCreateSessionModal();
+                    document.removeEventListener('keydown', escapeHandler);
+                }
+            };
+            document.addEventListener('keydown', escapeHandler);
+        }
+
+        // Close create session modal
+        function closeCreateSessionModal() {
+            const modal = document.getElementById('createSessionModal');
+            const input = document.getElementById('modalSessionName');
+            
+            modal.classList.remove('show');
+            input.value = '';
+        }
+
+        // Create session from modal
+        async function createSessionFromModal() {
+            const sessionName = document.getElementById('modalSessionName').value.trim();
+            
+            if (!sessionName) {
+                showError('Please enter a session name');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/tmux/create/${sessionName}`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(data.message);
+                    closeCreateSessionModal();
+                    loadSessions();
+                } else {
+                    showError('Failed to create session: ' + data.error);
+                }
+            } catch (error) {
+                showError('Failed to create session: ' + error.message);
+            }
+        }
+
+        // Legacy function for backward compatibility
+        async function createSession() {
+            openCreateSessionModal();
+        }
+
+        // Kill a session
+        async function killSession(sessionName) {
+            if (!confirm(`Are you sure you want to kill session "${sessionName}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/tmux/kill/${sessionName}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(data.message);
+                    loadSessions();
+                } else {
+                    showError('Failed to kill session: ' + data.error);
+                }
+            } catch (error) {
+                showError('Failed to kill session: ' + error.message);
+            }
+        }
+
+        // Get session info
+        async function getSessionInfo(sessionName) {
+            console.log('Getting session info for:', sessionName);
+            const url = `${API_BASE}/tmux/sessions/${sessionName}`;
+            console.log('Fetching URL:', url);
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                console.log('Session info response:', data);
+                
+                if (data.success) {
+                    // If stream panel is open for a different session, close it
+                    if (currentStream && currentStream.session !== sessionName) {
+                        closeStreamPanel();
+                    }
+                    
+                    currentSession = data.session;
+                    console.log('Current session set:', currentSession);
+                    showRightPanel();
+                } else {
+                    showError('Failed to get session info: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error getting session info:', error);
+                showError('Failed to get session info: ' + error.message);
+            }
+        }
+
+        // Show right panel with session details
+        function showRightPanel() {
+            console.log('showRightPanel called, currentSession:', currentSession);
+            if (!currentSession) {
+                console.log('No current session, returning');
+                return;
+            }
+            
+            const title = document.getElementById('rightPanelTitle');
+            const content = document.getElementById('rightPanelContent');
+            const panel = document.getElementById('rightPanel');
+            
+            title.textContent = `Session: ${currentSession.friendly_name || currentSession.name}`;
+            
+            // Update stream panel if it's open for the same session
+            if (currentStream && currentStream.session === currentSession.name) {
+                updateStreamPanelDisplay();
+            }
+            
+            let windowsHtml = '';
+            if (currentSession.windows_info && currentSession.windows_info.length > 0) {
+                windowsHtml = `
+                    <div class="detail-item">
+                        <div class="detail-value">
+                            <div id="selectedWindowContent" class="selected-window-content">
+                                <p class="no-window-selected">Select a window from the dropdown in the header to view its panes.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                windowsHtml = `
+                    <div class="detail-item">
+                        <div class="detail-value">No windows available</div>
+                    </div>
+                `;
+            }
+
+            content.innerHTML = windowsHtml;
+            
+            // Update header with session info
+            const titleElement = document.getElementById('rightPanelTitle');
+            const sessionIdElement = document.getElementById('rightPanelSessionId');
+            const metaElement = document.getElementById('rightPanelMeta');
+            const statusElement = document.getElementById('rightPanelStatus');
+            const friendlyNameContainer = document.getElementById('friendlyNameContainer');
+            
+            // Set session name (always show the actual name)
+            titleElement.textContent = currentSession.name;
+            
+            // Show friendly name if it exists and is different from the actual name
+            if (currentSession.friendly_name && currentSession.friendly_name !== currentSession.name) {
+                sessionIdElement.textContent = currentSession.friendly_name;
+                friendlyNameContainer.style.display = 'flex';
+            } else {
+                friendlyNameContainer.style.display = 'none';
+            }
+            
+            metaElement.innerHTML = `
+                <div class="meta-item">Created: ${new Date(currentSession.created).toLocaleString()} | Uptime: ${getUptime(currentSession.created)}</div>
+            `;
+            statusElement.innerHTML = `<span class="detail-status ${currentSession.attached ? 'attached' : 'detached'}">${currentSession.attached ? 'Attached' : 'Detached'}</span>`;
+            
+            panel.classList.add('open');
+            document.body.classList.add('right-panel-open');
+            
+            // Populate and show window dropdown in header
+            const windowDropdownContainer = document.getElementById('windowDropdownContainer');
+            const windowSelect = document.getElementById('windowSelect');
+            const windowControlsRow = document.getElementById('windowControlsRow');
+            
+            if (currentSession.windows_info && currentSession.windows_info.length > 0) {
+                // Populate dropdown options
+                windowSelect.innerHTML = `
+                    <option value="">Choose a window...</option>
+                    ${currentSession.windows_info.map((window, index) => `
+                        <option value="${window.index}" ${index === 0 ? 'selected' : ''}>Window ${window.index}: ${window.name}${window.active ? ' (Active)' : ''}</option>
+                    `).join('')}
+                `;
+                
+                // Show the dropdown container
+                windowDropdownContainer.style.display = 'block';
+                
+                // Auto-select first window if available
+                setTimeout(() => {
+                    showSelectedWindow();
+                }, 100); // Small delay to ensure DOM is ready
+            } else {
+                // Hide the dropdown container if no windows
+                windowDropdownContainer.style.display = 'none';
+            }
+        }
+
+        // Close right panel
+        function closeRightPanel() {
+            const panel = document.getElementById('rightPanel');
+            
+            panel.classList.remove('open');
+            document.body.classList.remove('right-panel-open');
+            currentSession = null;
+            
+            // Hide window dropdown and control rows
+            const windowDropdownContainer = document.getElementById('windowDropdownContainer');
+            const windowControlsRow = document.getElementById('windowControlsRow');
+            
+            if (windowDropdownContainer) windowDropdownContainer.style.display = 'none';
+            if (windowControlsRow) windowControlsRow.style.display = 'none';
+            
+            // Also close stream panel if open
+            closeStreamPanel();
+        }
+
+        // Close details panel (legacy function)
+        function closeDetailsPanel() {
+            closeRightPanel();
+        }
+
+        // Show selected window details
+        function showSelectedWindow() {
+            const select = document.getElementById('windowSelect');
+            const content = document.getElementById('selectedWindowContent');
+            
+            if (!select || !content || !currentSession || !currentSession.windows_info) {
+                return;
+            }
+            
+            const selectedWindowIndex = parseInt(select.value);
+            
+            if (isNaN(selectedWindowIndex)) {
+                content.innerHTML = '<p class="no-window-selected">Select a window from the dropdown in the header to view its panes.</p>';
+                
+                // Hide window controls when no window is selected
+                const windowControlsRow = document.getElementById('windowControlsRow');
+                
+                if (windowControlsRow) windowControlsRow.style.display = 'none';
+                
+                return;
+            }
+            
+            const window = currentSession.windows_info.find(w => w.index === selectedWindowIndex);
+            
+            if (!window) {
+                content.innerHTML = '<p class="no-window-selected">Window not found.</p>';
+                return;
+            }
+            
+            // Show window controls when a window is selected
+            const windowControlsRow = document.getElementById('windowControlsRow');
+            
+            if (windowControlsRow) windowControlsRow.style.display = 'flex';
+            
+            // Generate window content directly without making another API call
+            let windowHtml = `
+                <div class="window-info">
+            `;
+            
+            if (window.panes && window.panes.length > 0) {
+                const panesListHtml = window.panes.map(pane => `
+                    <div class="pane-info ${pane.active ? 'pane-active' : ''}" onclick="streamPane('${currentSession.name}', ${window.index}, ${pane.index}, '${window.name}', ${pane.index}, '${pane.name || `Pane ${pane.index}`}')" style="cursor: pointer;">
+                        <div class="pane-header">
+                            <span class="pane-name">${pane.name || `Pane ${pane.index}`}</span>
+                            <div class="pane-controls">
+                                ${pane.active ? '<span class="pane-active-badge">Active</span>' : ''}
+                                <span class="pane-stream-hint">Click to stream</span>
+                                ${!pane.active ? `<button class="btn btn-primary btn-sm" onclick="activatePane('${currentSession.name}', ${window.index}, ${pane.index}, event)" title="Activate this pane" style="margin-left: 8px; padding: 2px 6px; font-size: 0.7rem;">
+                                    Activate
+                                </button>` : ''}
+                                ${pane.active ? `
+                                <button class="btn btn-primary btn-sm" onclick="splitPaneHorizontally('${currentSession.name}', event)" title="Split horizontally" style="margin-left: 8px; padding: 2px 6px; font-size: 0.7rem;">
+                                    <span>↔️</span> New Pane
+                                </button>
+                                <button class="btn btn-primary btn-sm" onclick="splitPaneVertically('${currentSession.name}', event)" title="Split vertically" style="margin-left: 4px; padding: 2px 6px; font-size: 0.7rem;">
+                                    <span>↕️</span> New Pane
+                                </button>
+                                ` : ''}
+                                <button class="btn btn-secondary btn-sm" onclick="renameSpecificPane('${currentSession.name}', ${window.index}, ${pane.index}, event)" title="Rename this pane" style="margin-left: 4px; padding: 2px 6px; font-size: 0.7rem;">
+                                    Edit
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="killSpecificPane('${currentSession.name}', ${window.index}, ${pane.index}, event)" title="Kill this pane" style="margin-left: 4px; padding: 2px 6px; font-size: 0.7rem;">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                        <div class="pane-details">
+                            <div class="pane-command">
+                                <strong>Command:</strong> 
+                                <div class="command-container">
+                                    <span class="command-text">${pane.command || 'No command running'}</span>
+                                    ${pane.command ? `<button class="copy-btn" onclick="copyToClipboard('${pane.command.replace(/'/g, "\\'")}', event)" title="Copy command">Copy</button>` : ''}
+                                </div>
+                            </div>
+                            <div class="pane-path">
+                                <strong>Path:</strong> 
+                                <div class="command-container">
+                                    <span class="path-text">${pane.path || 'No path'}</span>
+                                    ${pane.path ? `<button class="copy-btn" onclick="copyToClipboard('${pane.path}', event)" title="Copy path">Copy</button>` : ''}
+                                </div>
+                            </div>
+                            <div class="pane-pid">
+                                <strong>PID:</strong> 
+                                <div class="command-container">
+                                    <span class="pid-text">${pane.pid || 'N/A'}</span>
+                                    ${pane.pid ? `<button class="copy-btn" onclick="copyToClipboard('${pane.pid}', event)" title="Copy PID">Copy</button>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                windowHtml += `
+                    <div class="panes-section">
+                        <div class="panes-list">
+                            ${panesListHtml}
+                        </div>
+                    </div>
+                `;
+            } else {
+                windowHtml += '<p class="no-panes">No panes in this window.</p>';
+            }
+            
+            windowHtml += '</div>';
+            content.innerHTML = windowHtml;
+        }
+
+
+
+
+
+
+
+        // Calculate uptime
+        function getUptime(createdDate) {
+            const created = new Date(createdDate);
+            const now = new Date();
+            const diff = now - created;
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            if (days > 0) {
+                return `${days}d ${hours}h ${minutes}m`;
+            } else if (hours > 0) {
+                return `${hours}h ${minutes}m ${seconds}s`;
+            } else if (minutes > 0) {
+                return `${minutes}m ${seconds}s`;
+            } else {
+                return `${seconds}s`;
+            }
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            const messagesContainer = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'success';
+            messageDiv.textContent = message;
+            messagesContainer.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const container = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <span>${message}</span>
+                <button class="close-btn" onclick="this.parentElement.remove()">×</button>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Trigger animation
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10);
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.classList.remove('show');
+                    setTimeout(() => {
+                        if (notification.parentElement) {
+                            notification.remove();
+                        }
+                    }, 300);
+                }
+            }, 3000);
+        }
+
+        // Copy text to clipboard
+        async function copyToClipboard(text, event) {
+            // Stop event propagation to prevent triggering parent click handlers
+            if (event) {
+                event.stopPropagation();
+            }
+            
+            try {
+                await navigator.clipboard.writeText(text);
+                showNotification('Copied to clipboard!');
+            } catch (error) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showNotification('Copied to clipboard!');
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            showNotification(message, 'error');
+        }
+
+        // Stream pane content
+        function streamPane(sessionName, windowIndex, paneIndex, windowName, paneNumber, paneName) {
+            // Always close existing stream before starting a new one
+            if (currentStream) {
+                closeStreamPanel();
+            }
+            
+            currentStream = {
+                session: sessionName,
+                window: windowIndex,
+                pane: paneIndex,
+                windowName: windowName,
+                paneNumber: paneNumber,
+                paneName: paneName
+            };
+            
+            showStreamPanel();
+            startStream();
+            
+            // Update command display immediately
+            updateStreamCommand();
+        }
+
+        // Debounce function to prevent too frequent updates
+        let updateDisplayTimeout = null;
+        
+        // Find common prefix between two strings
+        function findCommonPrefix(str1, str2) {
+            const minLength = Math.min(str1.length, str2.length);
+            let commonLength = 0;
+            
+            for (let i = 0; i < minLength; i++) {
+                if (str1[i] === str2[i]) {
+                    commonLength++;
+                } else {
+                    break;
+                }
+            }
+            
+            return str1.substring(0, commonLength);
+        }
+        
+
+        
+        // Copy stream command
+        function copyStreamCommand(event) {
+            const commandElement = document.getElementById('streamCommand');
+            if (commandElement && commandElement.textContent && commandElement.textContent !== 'Loading command...' && commandElement.textContent !== 'No command running' && commandElement.textContent !== 'Error loading command') {
+                copyToClipboard(commandElement.textContent, event);
+            }
+        }
+
+        // Update stream command display
+        async function updateStreamCommand() {
+            if (!currentStream) return;
+            
+            const commandElement = document.getElementById('streamCommand');
+            const copyButton = document.getElementById('copyStreamCommand');
+            if (!commandElement) return;
+            
+            try {
+                // Get the command from the current session's pane data
+                if (currentSession && currentSession.windows_info) {
+                    const window = currentSession.windows_info[currentStream.window];
+                    if (window && window.panes && window.panes[currentStream.pane]) {
+                        const pane = window.panes[currentStream.pane];
+                        if (pane.command && pane.command.trim()) {
+                            commandElement.textContent = pane.command;
+                            if (copyButton) copyButton.style.display = 'inline-block';
+                            return;
+                        }
+                    }
+                }
+                
+                // Fallback: fetch from API
+                const response = await fetch(`${API_BASE}/tmux/sessions/${currentStream.session}/windows/${currentStream.window}/panes/${currentStream.pane}/content`);
+                const data = await response.json();
+                
+                if (data.success && data.command) {
+                    commandElement.textContent = data.command;
+                    if (copyButton) copyButton.style.display = 'inline-block';
+                } else {
+                    commandElement.textContent = 'No command running';
+                    if (copyButton) copyButton.style.display = 'none';
+                }
+            } catch (error) {
+                commandElement.textContent = 'Error loading command';
+                if (copyButton) copyButton.style.display = 'none';
+            }
+        }
+
+        // Update stream panel display (without opening it)
+        function updateStreamPanelDisplay() {
+            if (!currentStream) return;
+            
+            // Debounce updates to prevent flickering
+            if (updateDisplayTimeout) {
+                clearTimeout(updateDisplayTimeout);
+            }
+            
+            updateDisplayTimeout = setTimeout(() => {
+                const title = document.getElementById('streamTitle');
+                const timestamp = document.getElementById('streamTimestamp');
+                
+                if (title) {
+                    title.textContent = `${currentStream.windowName}: ${currentStream.paneName}`;
+                    console.log('updateStreamPanelDisplay: Updated title to:', title.textContent);
+                }
+                
+                // Only update timestamp if it's been more than 5 seconds
+                if (timestamp) {
+                    const currentTime = new Date();
+                    const lastUpdate = timestamp.dataset.lastUpdate ? new Date(timestamp.dataset.lastUpdate) : new Date(0);
+                    if (currentTime - lastUpdate > 5000) {
+                        timestamp.textContent = currentTime.toLocaleString();
+                        timestamp.dataset.lastUpdate = currentTime.toISOString();
+                    }
+                }
+            }, 100); // 100ms debounce
+        }
+
+        // Show stream panel
+        function showStreamPanel() {
+            if (!currentStream) return;
+            
+            const panel = document.getElementById('streamPanel');
+            const title = document.getElementById('streamTitle');
+            const info = document.getElementById('streamInfo');
+            const output = document.getElementById('streamOutput');
+            
+            // Clear previous stream content
+            if (output) {
+                output.textContent = '';
+            }
+            
+            // Update the title immediately
+            if (title) {
+                title.textContent = `${currentStream.windowName}: ${currentStream.paneName}`;
+                console.log('Updated stream title to:', title.textContent);
+            } else {
+                console.error('streamTitle element not found');
+            }
+                
+            // Set up initial info content
+            const sessionName = currentSession && currentSession.friendly_name ? 
+                currentSession.friendly_name : currentStream.session;
+            
+            info.innerHTML = `
+                <div class="stream-info-content">
+                    <div class="stream-info-main">
+                        <span class="stream-status connected"></span>
+                        <span class="stream-command" id="streamCommand">Loading command...</span>
+                        <button class="copy-btn" id="copyStreamCommand" onclick="copyStreamCommand(event)" title="Copy command" style="display: none;">Copy</button>
+                    </div>
+                    <div class="stream-info-details">
+                        <span class="stream-update-time">Updated: <span id="streamTimestamp">${new Date().toLocaleString()}</span></span>
+                        <span class="stream-connection-status">Live</span>
+                    </div>
+                </div>
+            `;
+            
+            updateStreamPanelDisplay();
+            
+            panel.classList.add('open');
+            
+            // Add stream-panel-open class to right panel
+            const rightPanel = document.getElementById('rightPanel');
+            rightPanel.classList.add('stream-panel-open');
+            
+            // Update command display
+            updateStreamCommand();
+        }
+
+        // Start streaming
+        function startStream() {
+            if (!currentStream || isStreamPaused) return;
+            
+            // Close any existing EventSource connection
+            if (streamEventSource) {
+                streamEventSource.close();
+                streamEventSource = null;
+            }
+            
+            const url = `${API_BASE}/tmux/sessions/${currentStream.session}/windows/${currentStream.window}/panes/${currentStream.pane}/stream`;
+            
+            streamEventSource = new EventSource(url);
+            
+            streamEventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                
+                if (data.error) {
+                    document.getElementById('streamOutput').innerHTML = `Error: ${data.error}`;
+                    return;
+                }
+                
+                const output = document.getElementById('streamOutput');
+                const timestamp = document.getElementById('streamTimestamp');
+                
+                // Handle incremental updates from backend
+                if (data.updateType) {
+                    const currentContent = output.textContent;
+                    
+                    switch (data.updateType) {
+                        case 'append':
+                            // Append new content
+                            if (data.content) {
+                                output.textContent = currentContent + data.content;
+                            }
+                            break;
+                            
+                        case 'partial':
+                            // Partial update with common prefix
+                            if (data.content) {
+                                const beforeContent = currentContent.substring(0, data.startIndex);
+                                output.textContent = beforeContent + data.content;
+                            }
+                            break;
+                            
+                        case 'truncate':
+                            // Content was truncated
+                            output.textContent = data.fullContent || data.content;
+                            break;
+                            
+                        case 'full':
+                        default:
+                            // Full content replacement
+                            output.textContent = data.fullContent || data.content;
+                            break;
+                    }
+                } else {
+                    // Fallback for old format
+                    const currentContent = output.textContent;
+                    const newContent = data.content;
+                    
+                    if (currentContent !== newContent) {
+                        output.textContent = newContent;
+                    }
+                }
+                
+                // Only update timestamp if it's significantly different (every 5 seconds)
+                const currentTime = new Date();
+                const lastUpdate = timestamp.dataset.lastUpdate ? new Date(timestamp.dataset.lastUpdate) : new Date(0);
+                if (currentTime - lastUpdate > 5000) {
+                    timestamp.textContent = currentTime.toLocaleString();
+                    timestamp.dataset.lastUpdate = currentTime.toISOString();
+                }
+                
+                // Auto-scroll to bottom
+                output.scrollTop = output.scrollHeight;
+            };
+            
+            streamEventSource.onerror = function(event) {
+                document.getElementById('streamOutput').innerHTML = 'Stream connection error. Trying to reconnect...';
+                setTimeout(() => {
+                    if (streamEventSource) {
+                        streamEventSource.close();
+                        startStream();
+                    }
+                }, 5000);
+            };
+        }
+
+        // Toggle stream pause/resume
+        function toggleStream() {
+            const btn = document.getElementById('toggleStreamBtn');
+            const status = document.querySelector('.stream-status');
+            
+            if (isStreamPaused) {
+                // Resume
+                isStreamPaused = false;
+                btn.textContent = 'Pause';
+                status.className = 'stream-status connected';
+                startStream();
+            } else {
+                // Pause
+                isStreamPaused = true;
+                btn.textContent = 'Resume';
+                status.className = 'stream-status paused';
+                if (streamEventSource) {
+                    streamEventSource.close();
+                    streamEventSource = null;
+                }
+            }
+        }
+
+        // Refresh stream
+        function refreshStream() {
+            if (streamEventSource) {
+                streamEventSource.close();
+            }
+            startStream();
+        }
+
+        // Close stream panel
+        function closeStreamPanel() {
+            const panel = document.getElementById('streamPanel');
+            panel.classList.remove('open');
+            
+            // Remove stream-panel-open class from right panel
+            const rightPanel = document.getElementById('rightPanel');
+            rightPanel.classList.remove('stream-panel-open');
+            
+            // Clear the stream output
+            const output = document.getElementById('streamOutput');
+            if (output) {
+                output.textContent = '';
+            }
+            
+            // Close EventSource connection
+            if (streamEventSource) {
+                streamEventSource.close();
+                streamEventSource = null;
+            }
+            
+            // Reset stream state
+            currentStream = null;
+            isStreamPaused = false;
+        }
+
+        // Close all panels
+        function closeAllPanels() {
+            closeRightPanel();
+        }
+
+        // Minimize panels (reduce opacity)
+        function minimizePanels() {
+            const rightPanel = document.getElementById('rightPanel');
+            
+            if (rightPanel.classList.contains('open')) {
+                rightPanel.style.opacity = '0.3';
+            }
+            
+            // Add click to restore functionality
+            document.addEventListener('click', restorePanels, { once: true });
+        }
+
+        // Restore panels opacity
+        function restorePanels() {
+            const rightPanel = document.getElementById('rightPanel');
+            
+            rightPanel.style.opacity = '1';
+        }
+
+        // Check if any panels are open and hide quick actions if none
+        function checkAndHideQuickActions() {
+            const rightPanel = document.getElementById('rightPanel');
+            const quickActions = document.getElementById('quickActions');
+            const panelStatus = document.getElementById('panelStatus');
+            
+            if (!rightPanel.classList.contains('open')) {
+                quickActions.classList.remove('open');
+                panelStatus.classList.remove('show');
+            }
+        }
+
+        // Close top panel (stream panel first, then right panel)
+        function closeTopPanel() {
+            // Close stream panel first, then right panel
+            if (document.getElementById('streamPanel').classList.contains('open')) {
+                closeStreamPanel();
+            } else if (document.getElementById('rightPanel').classList.contains('open')) {
+                closeRightPanel();
+            }
+        }
+
+        // Open details panel in right panel
+        function openDetailsPanel(sessionName) {
+            console.log('Opening details panel for session:', sessionName);
+            getSessionInfo(sessionName);
+        }
+
+        // Edit friendly name
+        function editFriendlyName(sessionName, currentName) {
+            const newName = prompt('Enter a friendly name for this session:', currentName);
+            
+            if (newName === null) return; // User cancelled
+            
+            const trimmedName = newName.trim();
+            if (trimmedName === '') {
+                // Remove friendly name
+                removeFriendlyName(sessionName);
+                return;
+            }
+            
+            setFriendlyName(sessionName, trimmedName);
+        }
+
+        // Set friendly name
+        async function setFriendlyName(sessionName, friendlyName) {
+            try {
+                const response = await fetch(`${API_BASE}/tmux/session-names/${sessionName}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ friendly_name: friendlyName })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(`Friendly name '${friendlyName}' set for session '${sessionName}'`);
+                    loadSessions(); // Refresh the display
+                } else {
+                    showError('Failed to set friendly name: ' + data.error);
+                }
+            } catch (error) {
+                showError('Failed to set friendly name: ' + error.message);
+            }
+        }
+
+        // Remove friendly name
+        async function removeFriendlyName(sessionName) {
+            try {
+                const response = await fetch(`${API_BASE}/tmux/session-names/${sessionName}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(`Friendly name removed for session '${sessionName}'`);
+                    loadSessions(); // Refresh the display
+                } else {
+                    showError('Failed to remove friendly name: ' + data.error);
+                }
+            } catch (error) {
+                showError('Failed to remove friendly name: ' + error.message);
+            }
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            showNotification(message, 'success');
+        }
+
+        // Window Management Functions
+        async function createNewWindow(sessionName) {
+            try {
+                // Use tmux command to create a new window
+                const response = await fetch(`${API_BASE}/tmux/command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session: sessionName,
+                        command: 'new-window'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess('New window created successfully');
+                    // Update window dropdown and panes
+                    getSessionInfo(sessionName);
+                } else {
+                    showError('Failed to create new window: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                showError('Failed to create new window: ' + error.message);
+            }
+        }
+
+        async function renameCurrentWindow(sessionName) {
+            const select = document.getElementById('windowSelect');
+            if (!select || select.value === '') {
+                showError('Please select a window first');
+                return;
+            }
+            
+            const windowIndex = parseInt(select.value);
+            const currentWindow = currentSession.windows_info.find(w => w.index === windowIndex);
+            
+            if (!currentWindow) {
+                showError('Window not found');
+                return;
+            }
+            
+            const newName = prompt('Enter new name for window:', currentWindow.name);
+            
+            if (newName === null) return; // User cancelled
+            
+            const trimmedName = newName.trim();
+            if (trimmedName === '') {
+                showError('Window name cannot be empty');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/tmux/command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session: sessionName,
+                        command: `rename-window -t ${sessionName}:${windowIndex} "${trimmedName}"`
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(`Window renamed to '${trimmedName}'`);
+                    getSessionInfo(sessionName);
+                } else {
+                    showError('Failed to rename window: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                showError('Failed to rename window: ' + error.message);
+            }
+        }
+
+        async function killCurrentWindow(sessionName) {
+            const select = document.getElementById('windowSelect');
+            if (!select || select.value === '') {
+                showError('Please select a window first');
+                return;
+            }
+            
+            const windowIndex = parseInt(select.value);
+            const currentWindow = currentSession.windows_info.find(w => w.index === windowIndex);
+            
+            if (!currentWindow) {
+                showError('Window not found');
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to kill window "${currentWindow.name}"?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/tmux/command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session: sessionName,
+                        command: `kill-window -t ${sessionName}:${windowIndex}`
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess('Window killed successfully');
+                    getSessionInfo(sessionName);
+                } else {
+                    showError('Failed to kill window: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                showError('Failed to kill window: ' + error.message);
+            }
+        }
+
+
+
+        async function splitPaneHorizontally(sessionName, event) {
+            // Stop event propagation to prevent triggering the pane click
+            if (event) {
+                event.stopPropagation();
+            }
+            const select = document.getElementById('windowSelect');
+            if (!select || select.value === '') {
+                showError('Please select a window first');
+                return;
+            }
+            
+            const windowIndex = parseInt(select.value);
+            
+            try {
+                const response = await fetch(`${API_BASE}/tmux/command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session: sessionName,
+                        command: `split-window -h -t ${sessionName}:${windowIndex}`
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess('Pane split horizontally');
+                    getSessionInfo(sessionName);
+                } else {
+                    showError('Failed to split pane: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                showError('Failed to split pane: ' + error.message);
+            }
+        }
+
+        async function splitPaneVertically(sessionName, event) {
+            // Stop event propagation to prevent triggering the pane click
+            if (event) {
+                event.stopPropagation();
+            }
+            const select = document.getElementById('windowSelect');
+            if (!select || select.value === '') {
+                showError('Please select a window first');
+                return;
+            }
+            
+            const windowIndex = parseInt(select.value);
+            
+            try {
+                const response = await fetch(`${API_BASE}/tmux/command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session: sessionName,
+                        command: `split-window -v -t ${sessionName}:${windowIndex}`
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess('Pane split vertically');
+                    getSessionInfo(sessionName);
+                } else {
+                    showError('Failed to split pane: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                showError('Failed to split pane: ' + error.message);
+            }
+        }
+
+        async function killCurrentPane(sessionName) {
+            const select = document.getElementById('windowSelect');
+            if (!select || select.value === '') {
+                showError('Please select a window first');
+                return;
+            }
+            
+            const windowIndex = parseInt(select.value);
+            const currentWindow = currentSession.windows_info.find(w => w.index === windowIndex);
+            
+            if (!currentWindow) {
+                showError('Window not found');
+                return;
+            }
+            
+            if (!currentWindow.panes || currentWindow.panes.length === 0) {
+                showError('No panes available to kill');
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to kill the current pane in window "${currentWindow.name}"?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/tmux/command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session: sessionName,
+                        command: `kill-pane -t ${sessionName}:${windowIndex}`
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess('Current pane killed successfully');
+                    getSessionInfo(sessionName);
+                } else {
+                    showError('Failed to kill pane: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                showError('Failed to kill pane: ' + error.message);
+            }
+        }
+
+        async function killSpecificPane(sessionName, windowIndex, paneIndex, event) {
+            // Stop event propagation to prevent triggering the pane click
+            if (event) {
+                event.stopPropagation();
+            }
+            
+            if (!confirm(`Are you sure you want to kill pane ${paneIndex} in window ${windowIndex}?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/tmux/command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session: sessionName,
+                        command: `kill-pane -t ${sessionName}:${windowIndex}.${paneIndex}`
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(`Pane ${paneIndex} killed successfully`);
+                    getSessionInfo(sessionName);
+                } else {
+                    showError('Failed to kill pane: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                showError('Failed to kill pane: ' + error.message);
+            }
+        }
+
+        async function activatePane(sessionName, windowIndex, paneIndex, event) {
+            // Stop event propagation to prevent triggering the pane click
+            if (event) {
+                event.stopPropagation();
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/tmux/command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session: sessionName,
+                        command: `select-pane -t ${sessionName}:${windowIndex}.${paneIndex}`
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(`Pane ${paneIndex} activated successfully`);
+                    getSessionInfo(sessionName);
+                } else {
+                    showError('Failed to activate pane: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                showError('Failed to activate pane: ' + error.message);
+            }
+        }
+
+        async function renameSpecificPane(sessionName, windowIndex, paneIndex, event) {
+            // Stop event propagation to prevent triggering the pane click
+            if (event) {
+                event.stopPropagation();
+            }
+            
+            const newName = prompt(`Enter new name for pane ${paneIndex}:`);
+            
+            if (newName === null) return; // User cancelled
+            
+            const trimmedName = newName.trim();
+            if (trimmedName === '') {
+                showError('Pane name cannot be empty');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/tmux/command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session: sessionName,
+                        command: `select-pane -t ${sessionName}:${windowIndex}.${paneIndex} -T "${trimmedName}"`
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(`Pane ${paneIndex} renamed to '${trimmedName}'`);
+                    getSessionInfo(sessionName);
+                } else {
+                    showError('Failed to rename pane: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                showError('Failed to rename pane: ' + error.message);
+            }
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            loadSessions();
+            checkServiceStatus();
+        }, 30000);
+
+
+    </script>
+</body>
+</html>
