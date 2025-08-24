@@ -5,6 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>tmux-util - Session Manager</title>
     <style>
+        :root {
+            /* Light mode variables */
+            --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --bg-secondary: rgba(255, 255, 255, 0.95);
+            --bg-tertiary: rgba(255, 255, 255, 0.7);
+            --text-primary: #2c3e50;
+            --text-secondary: #64748b;
+            --text-muted: #6c757d;
+            --border-color: rgba(102, 126, 234, 0.1);
+            --border-light: rgba(255, 255, 255, 0.3);
+            --shadow-color: rgba(0, 0, 0, 0.08);
+            --shadow-light: rgba(0, 0, 0, 0.05);
+            --modal-bg: white;
+            --input-bg: #f8f9fa;
+            --input-border: #e9ecef;
+            --input-focus: #667eea;
+        }
+
+        [data-theme="dark"] {
+            /* Dark mode variables */
+            --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            --bg-secondary: rgba(30, 30, 30, 0.95);
+            --bg-tertiary: rgba(40, 40, 40, 0.7);
+            --text-primary: #e9ecef;
+            --text-secondary: #adb5bd;
+            --text-muted: #6c757d;
+            --border-color: rgba(102, 126, 234, 0.2);
+            --border-light: rgba(255, 255, 255, 0.1);
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --shadow-light: rgba(0, 0, 0, 0.2);
+            --modal-bg: #2d3748;
+            --input-bg: #4a5568;
+            --input-border: #718096;
+            --input-focus: #667eea;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,10 +49,10 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-primary);
             min-height: 100vh;
             margin: 0;
-            transition: padding-right 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         body.right-panel-open {
@@ -32,11 +68,11 @@
         }
 
         .header {
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--bg-secondary);
             backdrop-filter: blur(10px);
             padding: 1.5rem 2rem;
-            border-bottom: 1px solid rgba(102, 126, 234, 0.1);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px var(--shadow-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -54,18 +90,18 @@
         }
 
         .header h1 {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             font-size: 1.8rem;
             font-weight: 700;
             margin: 0;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-shadow: 0 2px 4px var(--shadow-color);
         }
 
         .header p {
-            color: #64748b;
+            color: var(--text-secondary);
             font-size: 0.95rem;
             margin: 0;
             font-weight: 500;
@@ -92,13 +128,14 @@
             align-items: center;
             gap: 0.5rem;
             font-size: 0.9rem;
-            background: rgba(255, 255, 255, 0.7);
+            background: var(--bg-tertiary);
             padding: 0.5rem 0.75rem;
             border-radius: 8px;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-light);
+            box-shadow: 0 2px 8px var(--shadow-light);
             transition: all 0.3s ease;
+            color: var(--text-primary);
         }
 
         .status-item:hover {
@@ -121,16 +158,16 @@
         }
 
         .section {
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--bg-secondary);
             backdrop-filter: blur(10px);
             border-radius: 12px;
             padding: 2rem;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-light);
+            box-shadow: 0 4px 20px var(--shadow-color);
         }
 
         .section h2 {
-            color: #2c3e50;
+            color: var(--text-primary);
             margin-bottom: 1.5rem;
             font-size: 1.3rem;
             font-weight: 600;
@@ -227,24 +264,24 @@
         }
 
         .session-card {
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--bg-secondary);
             backdrop-filter: blur(10px);
-            border: 2px solid rgba(102, 126, 234, 0.4);
+            border: 2px solid var(--border-color);
             border-radius: 16px;
             padding: 1.5rem;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 20px var(--shadow-color);
         }
 
         .session-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-            border-color: rgba(102, 126, 234, 0.3);
+            box-shadow: 0 8px 30px var(--shadow-color);
+            border-color: var(--border-color);
         }
 
         .session-card.attached {
             border-color: rgba(40, 167, 69, 0.3);
-            background: rgba(248, 255, 249, 0.95);
+            background: var(--bg-secondary);
         }
 
         .session-header {
@@ -263,12 +300,12 @@
         .session-name {
             font-size: 1.2rem;
             font-weight: 600;
-            color: #2c3e50;
+            color: var(--text-primary);
         }
 
         .session-original-name {
             font-size: 0.8rem;
-            color: #6c757d;
+            color: var(--text-muted);
             font-family: monospace;
         }
 
@@ -289,8 +326,19 @@
             color: #721c24;
         }
 
+        /* Dark mode adjustments for session status */
+        [data-theme="dark"] .session-status.attached {
+            background: #1e3a1e;
+            color: #4ade80;
+        }
+
+        [data-theme="dark"] .session-status.detached {
+            background: #3a1e1e;
+            color: #f87171;
+        }
+
         .session-details {
-            color: #6c757d;
+            color: var(--text-muted);
             font-size: 0.9rem;
         }
 
@@ -309,8 +357,8 @@
         .session-stats {
             margin-top: 8px;
             padding-top: 8px;
-            border-top: 1px solid #f8f9fa;
-            color: #6c757d;
+            border-top: 1px solid var(--border-light);
+            color: var(--text-muted);
             font-style: italic;
         }
         
@@ -341,11 +389,11 @@
 
         .command-text {
             font-family: 'Courier New', monospace;
-            background: #f8f9fa;
+            background: var(--input-bg);
             padding: 2px 6px;
             border-radius: 4px;
             font-size: 0.85rem;
-            color: #495057;
+            color: var(--text-primary);
             word-break: break-all;
             white-space: pre-wrap;
             max-width: 100%;
@@ -354,8 +402,8 @@
         }
 
         .window-info {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
             border-radius: 6px;
             padding: 8px;
             margin-bottom: 6px;
@@ -407,8 +455,8 @@
 
 
         .pane-info {
-            background: white;
-            border: 1px solid #dee2e6;
+            background: var(--modal-bg);
+            border: 1px solid var(--input-border);
             border-radius: 4px;
             padding: 8px;
             margin-bottom: 8px;
@@ -417,7 +465,7 @@
 
         .pane-info.pane-active {
             border-color: #28a745;
-            background: #f8fff9;
+            background: var(--input-bg);
         }
 
         .pane-header {
@@ -435,13 +483,13 @@
 
         .pane-stream-hint {
             font-size: 0.7rem;
-            color: #6c757d;
+            color: var(--text-muted);
             font-style: italic;
         }
 
         .pane-name {
             font-weight: 600;
-            color: #2c3e50;
+            color: var(--text-primary);
             font-size: 0.9rem;
         }
 
@@ -479,7 +527,7 @@
         .pane-details .pane-path strong,
         .pane-details .pane-pid strong {
             margin-bottom: 4px;
-            color: #495057;
+            color: var(--text-primary);
             font-size: 0.9rem;
         }
 
@@ -487,19 +535,20 @@
             display: block;
             margin-top: 3px;
             padding: 6px 8px;
-            background: #f1f3f4;
+            background: var(--input-bg);
             border-left: 3px solid #667eea;
             font-size: 0.8rem;
             line-height: 1.4;
+            color: var(--text-primary);
         }
 
         .path-text {
             font-family: 'Courier New', monospace;
-            background: #e9ecef;
+            background: var(--input-bg);
             padding: 6px 8px;
             border-radius: 4px;
             font-size: 0.8rem;
-            color: #495057;
+            color: var(--text-primary);
             word-break: break-all;
             display: block;
             margin-top: 3px;
@@ -507,11 +556,11 @@
 
         .pid-text {
             font-family: 'Courier New', monospace;
-            background: #e3f2fd;
+            background: var(--input-bg);
             padding: 6px 8px;
             border-radius: 4px;
             font-size: 0.8rem;
-            color: #1976d2;
+            color: var(--text-primary);
             display: block;
             margin-top: 3px;
         }
@@ -525,11 +574,11 @@
         .loading {
             text-align: center;
             padding: 3rem;
-            color: #6c757d;
+            color: var(--text-muted);
             font-size: 1.1rem;
-            background: rgba(255, 255, 255, 0.5);
+            background: var(--bg-tertiary);
             border-radius: 12px;
-            border: 2px dashed rgba(0, 0, 0, 0.1);
+            border: 2px dashed var(--border-light);
         }
 
         .error {
@@ -617,10 +666,10 @@
         }
 
         .details-header {
-            background: #f8f9fa;
+            background: var(--input-bg);
             padding: 15px 20px;
             border-bottom: 2px solid #667eea;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px var(--shadow-light);
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
@@ -659,7 +708,7 @@
 
         .name-value {
             font-family: monospace;
-            color: #2c3e50;
+            color: var(--text-primary);
             background: rgba(102, 126, 234, 0.1);
             padding: 2px 6px;
             border-radius: 4px;
@@ -696,19 +745,19 @@
 
         .session-name-header {
             font-weight: 600;
-            color: #2c3e50;
+            color: var(--text-primary);
             font-size: 1rem;
         }
 
         .session-id-header {
             font-size: 0.8rem;
-            color: #6c757d;
+            color: var(--text-muted);
             font-family: monospace;
         }
 
         .session-meta {
             font-size: 0.75rem;
-            color: #6c757d;
+            color: var(--text-muted);
         }
 
         .meta-item {
@@ -765,7 +814,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 4px 0;
-            border-bottom: 1px solid #f8f9fa;
+            border-bottom: 1px solid var(--border-light);
         }
 
         .detail-item:last-child {
@@ -773,7 +822,7 @@
         }
 
         .detail-value {
-            color: #2c3e50;
+            color: var(--text-primary);
             text-align: right;
             flex: 1;
             margin: 0;
@@ -783,11 +832,11 @@
         .window-dropdown {
             width: 100%;
             padding: 6px 10px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--input-border);
             border-radius: 4px;
-            background-color: white;
+            background-color: var(--input-bg);
             font-size: 14px;
-            color: #333;
+            color: var(--text-primary);
             cursor: pointer;
             transition: border-color 0.2s ease;
             margin: 0;
@@ -795,8 +844,8 @@
         
         .window-dropdown:focus {
             outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+            border-color: var(--input-focus);
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.25);
         }
         
         .selected-window-content {
@@ -804,21 +853,21 @@
         }
         
         .no-window-selected {
-            color: #666;
+            color: var(--text-muted);
             font-style: italic;
             text-align: center;
             padding: 20px;
-            background-color: #f8f9fa;
+            background-color: var(--input-bg);
             border-radius: 4px;
-            border: 1px dashed #ddd;
+            border: 1px dashed var(--input-border);
         }
         
         .no-panes {
-            color: #666;
+            color: var(--text-muted);
             font-style: italic;
             text-align: center;
             padding: 10px;
-            background-color: #f8f9fa;
+            background-color: var(--input-bg);
             border-radius: 4px;
         }
 
@@ -864,9 +913,9 @@
             top: 0;
             bottom: 0;
             width: 40%;
-            background: white;
+            background: var(--modal-bg);
             border-left: 3px solid #667eea;
-            box-shadow: -5px 0 20px rgba(0,0,0,0.1);
+            box-shadow: -5px 0 20px var(--shadow-color);
             transform: translateX(100%);
             transition: transform 0.3s ease, opacity 0.3s ease;
             z-index: 1001;
@@ -993,6 +1042,17 @@
             box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
         }
 
+        /* Dark mode adjustments for create session button */
+        [data-theme="dark"] .create-session-btn {
+            background: linear-gradient(135deg, #2d5a2d 0%, #1e4a3a 100%);
+            box-shadow: 0 4px 15px rgba(45, 90, 45, 0.4);
+        }
+
+        [data-theme="dark"] .create-session-btn:hover {
+            background: linear-gradient(135deg, #1e3a1e 0%, #152815 100%);
+            box-shadow: 0 6px 20px rgba(45, 90, 45, 0.5);
+        }
+
         .create-session-btn span {
             font-size: 1.2rem;
             font-weight: bold;
@@ -1059,9 +1119,9 @@
         .window-management {
             margin-bottom: 1rem;
             padding: 0.75rem;
-            background: #f8f9fa;
+            background: var(--input-bg);
             border-radius: 6px;
-            border: 1px solid #e9ecef;
+            border: 1px solid var(--input-border);
         }
 
         .window-management h4 {
@@ -1085,9 +1145,9 @@
         .pane-management {
             margin-top: 0.75rem;
             padding: 0.75rem;
-            background: #f8f9fa;
+            background: var(--input-bg);
             border-radius: 6px;
-            border: 1px solid #e9ecef;
+            border: 1px solid var(--input-border);
         }
 
         .pane-management h4 {
@@ -1127,9 +1187,9 @@
         }
 
         .modal-content {
-            background: white;
+            background: var(--modal-bg);
             border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 20px 60px var(--shadow-color);
             width: 90%;
             max-width: 600px;
             max-height: 90vh;
@@ -1172,17 +1232,18 @@
 
         #createSessionModal .form-control {
             padding: 10px 14px;
-            border: 2px solid #e9ecef;
+            border: 2px solid var(--input-border);
             border-radius: 8px;
             font-size: 0.95rem;
             transition: all 0.3s ease;
-            background: #f8f9fa;
+            background: var(--input-bg);
+            color: var(--text-primary);
         }
 
         #createSessionModal .form-control:focus {
             outline: none;
-            border-color: #667eea;
-            background: white;
+            border-color: var(--input-focus);
+            background: var(--modal-bg);
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
@@ -1219,6 +1280,31 @@
         }
 
 
+
+        /* Dark mode toggle button */
+        .dark-mode-toggle {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .dark-mode-toggle .light-mode-icon {
+            display: none;
+        }
+
+        [data-theme="dark"] .dark-mode-toggle .dark-mode-icon {
+            display: none;
+        }
+
+        [data-theme="dark"] .dark-mode-toggle .light-mode-icon {
+            display: block;
+        }
 
         /* Responsive adjustments */
         @media (max-width: 768px) {
@@ -1648,6 +1734,10 @@
                 <button class="refresh-btn" onclick="loadSessions()" title="Refresh sessions">
                     🔄
                 </button>
+                <button class="btn btn-secondary dark-mode-toggle" id="darkModeToggle" onclick="toggleDarkMode()" title="Toggle Dark Mode">
+                    <span class="dark-mode-icon">🌙</span>
+                    <span class="light-mode-icon">☀️</span>
+                </button>
             </div>
         </div>
 
@@ -1900,7 +1990,7 @@
                 <!-- Row 4: Window Dropdown and Controls -->
                 <div class="header-row" id="windowDropdownContainer" style="display: none;">
                     <div class="window-section">
-                        <select id="windowSelect" onchange="showSelectedWindow()" class="window-dropdown" style="background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 6px; padding: 8px 12px; font-size: 0.9rem; color: #2c3e50; backdrop-filter: blur(10px); min-width: 200px;">
+                        <select id="windowSelect" onchange="showSelectedWindow()" class="window-dropdown" style="min-width: 200px;">
                             <option value="">Choose a window...</option>
                         </select>
                         <div class="window-controls" id="windowControlsRow" style="display: none;">
@@ -1965,6 +2055,7 @@
             checkServiceStatus();
             loadSessions();
             initDirectoryAutocomplete();
+            initDarkMode();
             
             // Add keyboard support for closing panels
             document.addEventListener('keydown', function(event) {
@@ -2818,6 +2909,22 @@
 
         // Directory autocomplete functionality
         let directorySearchTimeout = null;
+
+        // Initialize dark mode
+        function initDarkMode() {
+            // Check for saved theme preference or default to light mode
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+
+        // Toggle dark mode
+        function toggleDarkMode() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
 
         // Initialize directory autocomplete
         function initDirectoryAutocomplete() {
