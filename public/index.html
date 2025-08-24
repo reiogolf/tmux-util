@@ -229,7 +229,7 @@
         .session-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(102, 126, 234, 0.4);
             border-radius: 16px;
             padding: 1.5rem;
             transition: all 0.3s ease;
@@ -619,7 +619,8 @@
         .details-header {
             background: #f8f9fa;
             padding: 15px 20px;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 2px solid #667eea;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
@@ -1534,12 +1535,8 @@
 
             <!-- Sessions Section -->
             <div class="section">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <div style="margin-bottom: 1.5rem;">
                     <h2>Active Sessions</h2>
-                    <button class="btn btn-primary" onclick="openCreateSessionModal()" style="display: flex; align-items: center; gap: 8px;">
-                        <span>➕</span>
-                        New Session
-                    </button>
                 </div>
                 <div id="sessionsContainer">
                     <div class="loading">Loading sessions...</div>
@@ -1564,13 +1561,172 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label for="modalSessionName">Session Name:</label>
-                    <input type="text" id="modalSessionName" class="form-control" placeholder="Enter session name">
+                    <label for="modalSessionName">Session Name: *</label>
+                    <input type="text" id="modalSessionName" class="form-control" placeholder="Enter session name" required>
+                </div>
+                <div class="form-group">
+                    <label for="modalWorkingDir">Working Directory:</label>
+                    <input type="text" id="modalWorkingDir" class="form-control" placeholder="/path/to/directory (optional)" list="directorySuggestions" autocomplete="off">
+                    <datalist id="directorySuggestions"></datalist>
+                </div>
+                <div class="form-group">
+                    <label for="modalStartCommand">Start Command:</label>
+                    <input type="text" id="modalStartCommand" class="form-control" placeholder="Command to run when session starts (optional)">
+                </div>
+                <div class="form-group">
+                    <label for="modalWindowName">Initial Window Name:</label>
+                    <input type="text" id="modalWindowName" class="form-control" placeholder="Name for the first window (optional)">
+                </div>
+                <div class="form-group">
+                    <label for="modalFriendlyName">Friendly Name:</label>
+                    <input type="text" id="modalFriendlyName" class="form-control" placeholder="Display name for the session (optional)">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="modalDetached" checked>
+                        Start detached (don't attach to session immediately)
+                    </label>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeCreateSessionModal()">Cancel</button>
                 <button class="btn btn-primary" onclick="createSessionFromModal()">Create Session</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rename Pane Modal -->
+    <div class="modal" id="renamePaneModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Rename Pane</h3>
+                <button class="modal-close" onclick="closeRenamePaneModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="modalPaneName">Pane Name:</label>
+                    <input type="text" id="modalPaneName" class="form-control" placeholder="Enter pane name">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeRenamePaneModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="renamePaneFromModal()">Rename</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Pane Modal -->
+    <div class="modal" id="deletePaneModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Delete Pane</h3>
+                <button class="modal-close" onclick="closeDeletePaneModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <p id="deletePaneMessage">Are you sure you want to delete this pane?</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDeletePaneModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="deletePaneFromModal()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rename Window Modal -->
+    <div class="modal" id="renameWindowModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Rename Window</h3>
+                <button class="modal-close" onclick="closeRenameWindowModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="modalWindowName">Window Name:</label>
+                    <input type="text" id="modalWindowName" class="form-control" placeholder="Enter window name">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeRenameWindowModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="renameWindowFromModal()">Rename</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Window Modal -->
+    <div class="modal" id="deleteWindowModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Delete Window</h3>
+                <button class="modal-close" onclick="closeDeleteWindowModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <p id="deleteWindowMessage">Are you sure you want to delete this window?</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDeleteWindowModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="deleteWindowFromModal()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Session Modal -->
+    <div class="modal" id="deleteSessionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Delete Session</h3>
+                <button class="modal-close" onclick="closeDeleteSessionModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <p id="deleteSessionMessage">Are you sure you want to delete this session?</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDeleteSessionModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="deleteSessionFromModal()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Current Pane Modal -->
+    <div class="modal" id="deleteCurrentPaneModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Delete Current Pane</h3>
+                <button class="modal-close" onclick="closeDeleteCurrentPaneModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <p id="deleteCurrentPaneMessage">Are you sure you want to delete the current pane?</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDeleteCurrentPaneModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="deleteCurrentPaneFromModal()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Friendly Name Modal -->
+    <div class="modal" id="editFriendlyNameModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Friendly Name</h3>
+                <button class="modal-close" onclick="closeEditFriendlyNameModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="modalFriendlyName">Friendly Name:</label>
+                    <input type="text" id="modalFriendlyName" class="form-control" placeholder="Enter friendly name">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditFriendlyNameModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="editFriendlyNameFromModal()">Save</button>
             </div>
         </div>
     </div>
@@ -1676,6 +1832,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             checkServiceStatus();
             loadSessions();
+            initDirectoryAutocomplete();
             
             // Add keyboard support for closing panels
             document.addEventListener('keydown', function(event) {
@@ -1873,15 +2030,30 @@
         // Close create session modal
         function closeCreateSessionModal() {
             const modal = document.getElementById('createSessionModal');
-            const input = document.getElementById('modalSessionName');
+            const sessionNameInput = document.getElementById('modalSessionName');
+            const workingDirInput = document.getElementById('modalWorkingDir');
+            const startCommandInput = document.getElementById('modalStartCommand');
+            const windowNameInput = document.getElementById('modalWindowName');
+            const friendlyNameInput = document.getElementById('modalFriendlyName');
+            const detachedCheckbox = document.getElementById('modalDetached');
             
             modal.classList.remove('show');
-            input.value = '';
+            sessionNameInput.value = '';
+            workingDirInput.value = '';
+            startCommandInput.value = '';
+            windowNameInput.value = '';
+            friendlyNameInput.value = '';
+            detachedCheckbox.checked = true;
         }
 
         // Create session from modal
         async function createSessionFromModal() {
             const sessionName = document.getElementById('modalSessionName').value.trim();
+            const workingDir = document.getElementById('modalWorkingDir').value.trim();
+            const startCommand = document.getElementById('modalStartCommand').value.trim();
+            const windowName = document.getElementById('modalWindowName').value.trim();
+            const friendlyName = document.getElementById('modalFriendlyName').value.trim();
+            const detached = document.getElementById('modalDetached').checked;
             
             if (!sessionName) {
                 showError('Please enter a session name');
@@ -1889,19 +2061,134 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE}/tmux/create/${sessionName}`, {
-                    method: 'POST'
+                // Step 1: Create basic session
+                console.log('Step 1: Creating basic session');
+                let createCommand = `new-session`;
+                if (detached) {
+                    createCommand += ` -d`;
+                }
+                createCommand += ` -s "${sessionName}"`;
+                
+                const createResponse = await fetch(`${API_BASE}/tmux/command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session: sessionName,
+                        command: createCommand
+                    })
                 });
                 
-                const data = await response.json();
-                
-                if (data.success) {
-                    showSuccess(data.message);
-                    closeCreateSessionModal();
-                    loadSessions();
-                } else {
-                    showError('Failed to create session: ' + data.error);
+                const createData = await createResponse.json();
+                if (!createData.success) {
+                    showError('Failed to create session: ' + (createData.error || 'Unknown error'));
+                    return;
                 }
+                console.log('Session created successfully');
+                
+                // Step 2: Set working directory if specified
+                if (workingDir) {
+                    try {
+                        console.log('Step 2: Setting working directory to:', workingDir);
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        
+                        const cdResponse = await fetch(`${API_BASE}/tmux/command`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                session: sessionName,
+                                command: `send-keys -t ${sessionName}:0 "cd ${workingDir}" C-m`
+                            })
+                        });
+                        
+                        const cdData = await cdResponse.json();
+                        if (!cdData.success) {
+                            console.warn('Failed to set working directory:', cdData.error);
+                        } else {
+                            console.log('Working directory set successfully');
+                        }
+                    } catch (error) {
+                        console.warn('Failed to set working directory:', error);
+                    }
+                }
+                
+                // Step 3: Rename window if specified
+                if (windowName) {
+                    try {
+                        console.log('Step 3: Renaming window to:', windowName);
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                        
+                        const renameResponse = await fetch(`${API_BASE}/tmux/command`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                session: sessionName,
+                                command: `rename-window -t ${sessionName}:0 "${windowName}"`
+                            })
+                        });
+                        
+                        const renameData = await renameResponse.json();
+                        if (!renameData.success) {
+                            console.warn('Failed to rename window:', renameData.error);
+                        } else {
+                            console.log('Window renamed successfully');
+                        }
+                    } catch (error) {
+                        console.warn('Failed to rename window:', error);
+                    }
+                }
+                
+                // Step 4: Run start command if specified
+                if (startCommand) {
+                    try {
+                        console.log('Step 4: Running start command:', startCommand);
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                        
+                        const cmdResponse = await fetch(`${API_BASE}/tmux/command`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                session: sessionName,
+                                command: `send-keys -t ${sessionName}:0 "${startCommand}" C-m`
+                            })
+                        });
+                        
+                        const cmdData = await cmdResponse.json();
+                        if (!cmdData.success) {
+                            console.warn('Failed to run start command:', cmdData.error);
+                        } else {
+                            console.log('Start command executed successfully');
+                        }
+                    } catch (error) {
+                        console.warn('Failed to run start command:', error);
+                    }
+                }
+                
+                // Set friendly name if provided
+                if (friendlyName) {
+                    try {
+                        await fetch(`${API_BASE}/tmux/session-names/${sessionName}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ friendly_name: friendlyName })
+                        });
+                    } catch (error) {
+                        console.warn('Failed to set friendly name:', error);
+                    }
+                }
+                
+                showSuccess(`Session '${sessionName}' created successfully`);
+                closeCreateSessionModal();
+                loadSessions();
             } catch (error) {
                 showError('Failed to create session: ' + error.message);
             }
@@ -1912,11 +2199,349 @@
             openCreateSessionModal();
         }
 
-        // Kill a session
-        async function killSession(sessionName) {
-            if (!confirm(`Are you sure you want to kill session "${sessionName}"?`)) {
+        // Global variables for modals
+        let renamePaneData = null;
+        let deletePaneData = null;
+        let renameWindowData = null;
+        let deleteWindowData = null;
+        let deleteSessionData = null;
+        let deleteCurrentPaneData = null;
+        let editFriendlyNameData = null;
+
+        // Open rename pane modal
+        function openRenamePaneModal(sessionName, windowIndex, paneIndex, currentName) {
+            const modal = document.getElementById('renamePaneModal');
+            const input = document.getElementById('modalPaneName');
+            
+            // Store the pane data for use in the rename function
+            renamePaneData = { sessionName, windowIndex, paneIndex };
+            
+            // Set the current name as the input value
+            input.value = currentName;
+            
+            modal.classList.add('show');
+            input.focus();
+            input.select(); // Select all text for easy editing
+            
+            // Add escape key listener
+            const escapeHandler = function(event) {
+                if (event.key === 'Escape') {
+                    closeRenamePaneModal();
+                    document.removeEventListener('keydown', escapeHandler);
+                }
+            };
+            document.addEventListener('keydown', escapeHandler);
+        }
+
+        // Close rename pane modal
+        function closeRenamePaneModal() {
+            const modal = document.getElementById('renamePaneModal');
+            const input = document.getElementById('modalPaneName');
+            
+            modal.classList.remove('show');
+            input.value = '';
+            renamePaneData = null;
+        }
+
+        // Rename pane from modal
+        async function renamePaneFromModal() {
+            if (!renamePaneData) {
+                showError('No pane data available');
                 return;
             }
+            
+            const { sessionName, windowIndex, paneIndex } = renamePaneData;
+            const newName = document.getElementById('modalPaneName').value.trim();
+            
+            if (!newName) {
+                showError('Please enter a pane name');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/tmux/command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session: sessionName,
+                        command: `select-pane -t ${sessionName}:${windowIndex}.${paneIndex} -T "${newName}"`
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(`Pane renamed to '${newName}'`);
+                    closeRenamePaneModal();
+                    getSessionInfo(sessionName);
+                } else {
+                    showError('Failed to rename pane: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                showError('Failed to rename pane: ' + error.message);
+            }
+        }
+
+        // Open delete pane modal
+        function openDeletePaneModal(sessionName, windowIndex, paneIndex, paneName) {
+            const modal = document.getElementById('deletePaneModal');
+            const message = document.getElementById('deletePaneMessage');
+            
+            // Store the pane data for use in the delete function
+            deletePaneData = { sessionName, windowIndex, paneIndex };
+            
+            // Set the confirmation message
+            message.textContent = `Are you sure you want to delete pane "${paneName}"?`;
+            
+            modal.classList.add('show');
+            
+            // Add escape key listener
+            const escapeHandler = function(event) {
+                if (event.key === 'Escape') {
+                    closeDeletePaneModal();
+                    document.removeEventListener('keydown', escapeHandler);
+                }
+            };
+            document.addEventListener('keydown', escapeHandler);
+        }
+
+        // Close delete pane modal
+        function closeDeletePaneModal() {
+            const modal = document.getElementById('deletePaneModal');
+            
+            modal.classList.remove('show');
+            deletePaneData = null;
+        }
+
+        // Delete pane from modal
+        async function deletePaneFromModal() {
+            if (!deletePaneData) {
+                showError('No pane data available');
+                return;
+            }
+            
+            const { sessionName, windowIndex, paneIndex } = deletePaneData;
+
+            try {
+                const response = await fetch(`${API_BASE}/tmux/command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session: sessionName,
+                        command: `kill-pane -t ${sessionName}:${windowIndex}.${paneIndex}`
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(`Pane deleted successfully`);
+                    closeDeletePaneModal();
+                    getSessionInfo(sessionName);
+                } else {
+                    showError('Failed to delete pane: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                showError('Failed to delete pane: ' + error.message);
+            }
+        }
+
+        // Open rename window modal
+        function openRenameWindowModal(sessionName, windowIndex, currentName) {
+            const modal = document.getElementById('renameWindowModal');
+            const input = document.getElementById('modalWindowName');
+            
+            // Store the window data for use in the rename function
+            renameWindowData = { sessionName, windowIndex };
+            
+            // Set the current name as the input value
+            input.value = currentName;
+            
+            modal.classList.add('show');
+            input.focus();
+            input.select(); // Select all text for easy editing
+            
+            // Add escape key listener
+            const escapeHandler = function(event) {
+                if (event.key === 'Escape') {
+                    closeRenameWindowModal();
+                    document.removeEventListener('keydown', escapeHandler);
+                }
+            };
+            document.addEventListener('keydown', escapeHandler);
+        }
+
+        // Close rename window modal
+        function closeRenameWindowModal() {
+            const modal = document.getElementById('renameWindowModal');
+            const input = document.getElementById('modalWindowName');
+            
+            modal.classList.remove('show');
+            input.value = '';
+            renameWindowData = null;
+        }
+
+        // Rename window from modal
+        async function renameWindowFromModal() {
+            if (!renameWindowData) {
+                showError('No window data available');
+                return;
+            }
+            
+            const { sessionName, windowIndex } = renameWindowData;
+            const newName = document.getElementById('modalWindowName').value.trim();
+            
+            if (!newName) {
+                showError('Please enter a window name');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/tmux/command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session: sessionName,
+                        command: `rename-window -t ${sessionName}:${windowIndex} "${newName}"`
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(`Window renamed to '${newName}'`);
+                    closeRenameWindowModal();
+                    getSessionInfo(sessionName);
+                } else {
+                    showError('Failed to rename window: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                showError('Failed to rename window: ' + error.message);
+            }
+        }
+
+        // Open delete window modal
+        function openDeleteWindowModal(sessionName, windowIndex, windowName) {
+            const modal = document.getElementById('deleteWindowModal');
+            const message = document.getElementById('deleteWindowMessage');
+            
+            // Store the window data for use in the delete function
+            deleteWindowData = { sessionName, windowIndex };
+            
+            // Set the confirmation message
+            message.textContent = `Are you sure you want to delete window "${windowName}"?`;
+            
+            modal.classList.add('show');
+            
+            // Add escape key listener
+            const escapeHandler = function(event) {
+                if (event.key === 'Escape') {
+                    closeDeleteWindowModal();
+                    document.removeEventListener('keydown', escapeHandler);
+                }
+            };
+            document.addEventListener('keydown', escapeHandler);
+        }
+
+        // Close delete window modal
+        function closeDeleteWindowModal() {
+            const modal = document.getElementById('deleteWindowModal');
+            
+            modal.classList.remove('show');
+            deleteWindowData = null;
+        }
+
+        // Delete window from modal
+        async function deleteWindowFromModal() {
+            if (!deleteWindowData) {
+                showError('No window data available');
+                return;
+            }
+            
+            const { sessionName, windowIndex } = deleteWindowData;
+
+            try {
+                const response = await fetch(`${API_BASE}/tmux/command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session: sessionName,
+                        command: `kill-window -t ${sessionName}:${windowIndex}`
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(`Window deleted successfully`);
+                    closeDeleteWindowModal();
+                    
+                    // Check if this was the last window in the session
+                    if (currentSession.windows_info.length === 1) {
+                        // This was the last window, session will be deleted
+                        showSuccess('Last window deleted - session deleted');
+                        closeRightPanel();
+                        // Refresh the sessions list to remove the deleted session
+                        loadSessions();
+                    } else {
+                        // Still have other windows, refresh session info
+                        getSessionInfo(sessionName);
+                    }
+                } else {
+                    showError('Failed to delete window: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                showError('Failed to delete window: ' + error.message);
+            }
+        }
+
+        // Open delete session modal
+        function openDeleteSessionModal(sessionName) {
+            const modal = document.getElementById('deleteSessionModal');
+            const message = document.getElementById('deleteSessionMessage');
+            
+            // Store the session data for use in the delete function
+            deleteSessionData = { sessionName };
+            
+            // Set the confirmation message
+            message.textContent = `Are you sure you want to delete session "${sessionName}"?`;
+            
+            modal.classList.add('show');
+            
+            // Add escape key listener
+            const escapeHandler = function(event) {
+                if (event.key === 'Escape') {
+                    closeDeleteSessionModal();
+                    document.removeEventListener('keydown', escapeHandler);
+                }
+            };
+            document.addEventListener('keydown', escapeHandler);
+        }
+
+        // Close delete session modal
+        function closeDeleteSessionModal() {
+            const modal = document.getElementById('deleteSessionModal');
+            
+            modal.classList.remove('show');
+            deleteSessionData = null;
+        }
+
+        // Delete session from modal
+        async function deleteSessionFromModal() {
+            if (!deleteSessionData) {
+                showError('No session data available');
+                return;
+            }
+            
+            const { sessionName } = deleteSessionData;
 
             try {
                 const response = await fetch(`${API_BASE}/tmux/kill/${sessionName}`, {
@@ -1927,13 +2552,261 @@
                 
                 if (data.success) {
                     showSuccess(data.message);
+                    closeDeleteSessionModal();
                     loadSessions();
                 } else {
-                    showError('Failed to kill session: ' + data.error);
+                    showError('Failed to delete session: ' + data.error);
                 }
             } catch (error) {
-                showError('Failed to kill session: ' + error.message);
+                showError('Failed to delete session: ' + error.message);
             }
+        }
+
+        // Open delete current pane modal
+        function openDeleteCurrentPaneModal(sessionName, windowIndex, windowName) {
+            const modal = document.getElementById('deleteCurrentPaneModal');
+            const message = document.getElementById('deleteCurrentPaneMessage');
+            
+            // Store the pane data for use in the delete function
+            deleteCurrentPaneData = { sessionName, windowIndex };
+            
+            // Set the confirmation message
+            message.textContent = `Are you sure you want to kill the current pane in window "${windowName}"?`;
+            
+            modal.classList.add('show');
+            
+            // Add escape key listener
+            const escapeHandler = function(event) {
+                if (event.key === 'Escape') {
+                    closeDeleteCurrentPaneModal();
+                    document.removeEventListener('keydown', escapeHandler);
+                }
+            };
+            document.addEventListener('keydown', escapeHandler);
+        }
+
+        // Close delete current pane modal
+        function closeDeleteCurrentPaneModal() {
+            const modal = document.getElementById('deleteCurrentPaneModal');
+            
+            modal.classList.remove('show');
+            deleteCurrentPaneData = null;
+        }
+
+        // Delete current pane from modal
+        async function deleteCurrentPaneFromModal() {
+            if (!deleteCurrentPaneData) {
+                showError('No pane data available');
+                return;
+            }
+            
+            const { sessionName, windowIndex } = deleteCurrentPaneData;
+
+            try {
+                const response = await fetch(`${API_BASE}/tmux/command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session: sessionName,
+                        command: `kill-pane -t ${sessionName}:${windowIndex}`
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess('Current pane killed successfully');
+                    closeDeleteCurrentPaneModal();
+                    getSessionInfo(sessionName);
+                } else {
+                    showError('Failed to kill pane: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                showError('Failed to kill pane: ' + error.message);
+            }
+        }
+
+        // Open edit friendly name modal
+        function openEditFriendlyNameModal(sessionName, currentName) {
+            const modal = document.getElementById('editFriendlyNameModal');
+            const input = document.getElementById('modalFriendlyName');
+            
+            // Store the session data for use in the edit function
+            editFriendlyNameData = { sessionName };
+            
+            // Set the current name as the input value
+            input.value = currentName || '';
+            
+            modal.classList.add('show');
+            input.focus();
+            input.select(); // Select all text for easy editing
+            
+            // Add escape key listener
+            const escapeHandler = function(event) {
+                if (event.key === 'Escape') {
+                    closeEditFriendlyNameModal();
+                    document.removeEventListener('keydown', escapeHandler);
+                }
+            };
+            document.addEventListener('keydown', escapeHandler);
+        }
+
+        // Close edit friendly name modal
+        function closeEditFriendlyNameModal() {
+            const modal = document.getElementById('editFriendlyNameModal');
+            const input = document.getElementById('modalFriendlyName');
+            
+            modal.classList.remove('show');
+            input.value = '';
+            editFriendlyNameData = null;
+        }
+
+        // Edit friendly name from modal
+        async function editFriendlyNameFromModal() {
+            if (!editFriendlyNameData) {
+                showError('No session data available');
+                return;
+            }
+            
+            const { sessionName } = editFriendlyNameData;
+            const newName = document.getElementById('modalFriendlyName').value.trim();
+            
+            if (newName === '') {
+                // Remove friendly name
+                removeFriendlyName(sessionName);
+                closeEditFriendlyNameModal();
+                return;
+            }
+            
+            setFriendlyName(sessionName, newName);
+            closeEditFriendlyNameModal();
+        }
+
+        // Directory autocomplete functionality
+        let directorySearchTimeout = null;
+
+        // Initialize directory autocomplete
+        function initDirectoryAutocomplete() {
+            const workingDirInput = document.getElementById('modalWorkingDir');
+            if (workingDirInput) {
+                workingDirInput.addEventListener('input', handleDirectoryInput);
+                workingDirInput.addEventListener('focus', () => loadDirectorySuggestions(''));
+            }
+        }
+
+        // Handle directory input changes
+        function handleDirectoryInput(event) {
+            const query = event.target.value;
+            
+            // Clear previous timeout
+            if (directorySearchTimeout) {
+                clearTimeout(directorySearchTimeout);
+            }
+            
+            // Debounce the search to avoid too many requests
+            directorySearchTimeout = setTimeout(() => {
+                loadDirectorySuggestions(query);
+            }, 300);
+        }
+
+        // Load directory suggestions
+        async function loadDirectorySuggestions(query) {
+            try {
+                const datalist = document.getElementById('directorySuggestions');
+                if (!datalist) return;
+
+                // Clear existing options
+                datalist.innerHTML = '';
+
+                if (!query || query.trim() === '') {
+                    // If no query, show common directories
+                    const commonDirs = ['/home', '/var', '/etc', '/usr', '/opt', '/tmp', '/root'];
+                    commonDirs.forEach(dir => {
+                        const option = document.createElement('option');
+                        option.value = dir;
+                        option.textContent = dir;
+                        datalist.appendChild(option);
+                    });
+                    return;
+                }
+
+                // Determine the base path and search term
+                let basePath = '/';
+                let searchTerm = query;
+                
+                if (query.startsWith('/')) {
+                    const lastSlashIndex = query.lastIndexOf('/');
+                    if (lastSlashIndex === 0) {
+                        // Just "/" - search in root
+                        basePath = '/';
+                        searchTerm = '';
+                    } else if (lastSlashIndex > 0) {
+                        // Has path components
+                        basePath = query.substring(0, lastSlashIndex);
+                        searchTerm = query.substring(lastSlashIndex + 1);
+                    }
+                } else {
+                    // Relative path - search in current working directory
+                    basePath = process.cwd ? process.cwd() : '/home';
+                    searchTerm = query;
+                }
+
+                const response = await fetch(`${API_BASE}/api/directories?path=${encodeURIComponent(basePath)}&query=${encodeURIComponent(searchTerm)}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    // Add suggestions based on the current input
+                    data.directories.forEach(dir => {
+                        const option = document.createElement('option');
+                        
+                        if (query.startsWith('/')) {
+                            // Absolute path
+                            option.value = dir.fullPath;
+                            option.textContent = dir.fullPath;
+                        } else {
+                            // Relative path
+                            option.value = dir.name;
+                            option.textContent = dir.name;
+                        }
+                        
+                        datalist.appendChild(option);
+                    });
+
+                    // If no results and user is typing a path, try to complete the path
+                    if (data.directories.length === 0 && query.includes('/')) {
+                        const pathParts = query.split('/');
+                        const partialPath = pathParts.slice(0, -1).join('/');
+                        const partialSearch = pathParts[pathParts.length - 1];
+                        
+                        if (partialPath && partialSearch) {
+                            try {
+                                const partialResponse = await fetch(`${API_BASE}/api/directories?path=${encodeURIComponent(partialPath)}&query=${encodeURIComponent(partialSearch)}`);
+                                const partialData = await partialResponse.json();
+                                
+                                if (partialData.success && partialData.directories.length > 0) {
+                                    partialData.directories.forEach(dir => {
+                                        const option = document.createElement('option');
+                                        option.value = dir.fullPath;
+                                        option.textContent = dir.fullPath;
+                                        datalist.appendChild(option);
+                                    });
+                                }
+                            } catch (error) {
+                                console.error('Error loading partial path suggestions:', error);
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading directory suggestions:', error);
+            }
+        }
+
+        // Kill a session
+        async function killSession(sessionName) {
+            openDeleteSessionModal(sessionName);
         }
 
         // Get session info
@@ -2691,18 +3564,7 @@
 
         // Edit friendly name
         function editFriendlyName(sessionName, currentName) {
-            const newName = prompt('Enter a friendly name for this session:', currentName);
-            
-            if (newName === null) return; // User cancelled
-            
-            const trimmedName = newName.trim();
-            if (trimmedName === '') {
-                // Remove friendly name
-                removeFriendlyName(sessionName);
-                return;
-            }
-            
-            setFriendlyName(sessionName, trimmedName);
+            openEditFriendlyNameModal(sessionName, currentName);
         }
 
         // Set friendly name
@@ -2798,39 +3660,8 @@
                 return;
             }
             
-            const newName = prompt('Enter new name for window:', currentWindow.name);
-            
-            if (newName === null) return; // User cancelled
-            
-            const trimmedName = newName.trim();
-            if (trimmedName === '') {
-                showError('Window name cannot be empty');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE}/tmux/command`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        session: sessionName,
-                        command: `rename-window -t ${sessionName}:${windowIndex} "${trimmedName}"`
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showSuccess(`Window renamed to '${trimmedName}'`);
-                    getSessionInfo(sessionName);
-                } else {
-                    showError('Failed to rename window: ' + (data.error || 'Unknown error'));
-                }
-            } catch (error) {
-                showError('Failed to rename window: ' + error.message);
-            }
+            // Open the rename window modal
+            openRenameWindowModal(sessionName, windowIndex, currentWindow.name);
         }
 
         async function killCurrentWindow(sessionName) {
@@ -2848,44 +3679,8 @@
                 return;
             }
             
-            if (!confirm(`Are you sure you want to kill window "${currentWindow.name}"?`)) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE}/tmux/command`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        session: sessionName,
-                        command: `kill-window -t ${sessionName}:${windowIndex}`
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showSuccess('Window killed successfully');
-                    
-                    // Check if this was the last window in the session
-                    if (currentSession.windows_info.length === 1) {
-                        // This was the last window, session will be deleted
-                        showSuccess('Last window killed - session deleted');
-                        closeRightPanel();
-                        // Refresh the sessions list to remove the deleted session
-                        loadSessions();
-                    } else {
-                        // Still have other windows, refresh session info
-                        getSessionInfo(sessionName);
-                    }
-                } else {
-                    showError('Failed to kill window: ' + (data.error || 'Unknown error'));
-                }
-            } catch (error) {
-                showError('Failed to kill window: ' + error.message);
-            }
+            // Open the delete window modal
+            openDeleteWindowModal(sessionName, windowIndex, currentWindow.name);
         }
 
         async function activateCurrentWindow(sessionName) {
@@ -3026,33 +3821,8 @@
                 return;
             }
             
-            if (!confirm(`Are you sure you want to kill the current pane in window "${currentWindow.name}"?`)) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE}/tmux/command`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        session: sessionName,
-                        command: `kill-pane -t ${sessionName}:${windowIndex}`
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showSuccess('Current pane killed successfully');
-                    getSessionInfo(sessionName);
-                } else {
-                    showError('Failed to kill pane: ' + (data.error || 'Unknown error'));
-                }
-            } catch (error) {
-                showError('Failed to kill pane: ' + error.message);
-            }
+            // Open the delete current pane modal
+            openDeleteCurrentPaneModal(sessionName, windowIndex, currentWindow.name);
         }
 
         async function killSpecificPane(sessionName, windowIndex, paneIndex, event) {
@@ -3061,33 +3831,13 @@
                 event.stopPropagation();
             }
             
-            if (!confirm(`Are you sure you want to kill pane ${paneIndex} in window ${windowIndex}?`)) {
-                return;
-            }
+            // Get current pane name for better confirmation message
+            const currentWindow = currentSession.windows_info.find(w => w.index === windowIndex);
+            const currentPane = currentWindow?.panes?.find(p => p.index === paneIndex);
+            const currentPaneName = currentPane?.name || `Pane ${paneIndex}`;
             
-            try {
-                const response = await fetch(`${API_BASE}/tmux/command`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        session: sessionName,
-                        command: `kill-pane -t ${sessionName}:${windowIndex}.${paneIndex}`
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showSuccess(`Pane ${paneIndex} killed successfully`);
-                    getSessionInfo(sessionName);
-                } else {
-                    showError('Failed to kill pane: ' + (data.error || 'Unknown error'));
-                }
-            } catch (error) {
-                showError('Failed to kill pane: ' + error.message);
-            }
+            // Open the delete pane modal
+            openDeletePaneModal(sessionName, windowIndex, paneIndex, currentPaneName);
         }
 
         async function activatePane(sessionName, windowIndex, paneIndex, event) {
@@ -3127,39 +3877,13 @@
                 event.stopPropagation();
             }
             
-            const newName = prompt(`Enter new name for pane ${paneIndex}:`);
+            // Get current pane name
+            const currentWindow = currentSession.windows_info.find(w => w.index === windowIndex);
+            const currentPane = currentWindow?.panes?.find(p => p.index === paneIndex);
+            const currentPaneName = currentPane?.name || `Pane ${paneIndex}`;
             
-            if (newName === null) return; // User cancelled
-            
-            const trimmedName = newName.trim();
-            if (trimmedName === '') {
-                showError('Pane name cannot be empty');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE}/tmux/command`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        session: sessionName,
-                        command: `select-pane -t ${sessionName}:${windowIndex}.${paneIndex} -T "${trimmedName}"`
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showSuccess(`Pane ${paneIndex} renamed to '${trimmedName}'`);
-                    getSessionInfo(sessionName);
-                } else {
-                    showError('Failed to rename pane: ' + (data.error || 'Unknown error'));
-                }
-            } catch (error) {
-                showError('Failed to rename pane: ' + error.message);
-            }
+            // Open the rename pane modal
+            openRenamePaneModal(sessionName, windowIndex, paneIndex, currentPaneName);
         }
 
         // Auto-refresh every 30 seconds

@@ -39,7 +39,7 @@ function saveSessionNames(sessionNames) {
     return false;
   }
 }
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Function to check if IP is in allowed ranges
 function isIPAllowed(ip) {
@@ -648,6 +648,8 @@ app.delete('/tmux/session-names/:session', (req, res) => {
 app.post('/tmux/command', (req, res) => {
   const { session, command } = req.body;
   
+  console.log('Received command request:', { session, command });
+  
   if (!session || !command) {
     return res.status(400).json({
       success: false,
@@ -655,33 +657,147 @@ app.post('/tmux/command', (req, res) => {
     });
   }
   
-  // Validate session exists
-  exec(`tmux has-session -t ${session} 2>/dev/null`, (error) => {
-    if (error) {
-      return res.status(404).json({
-        success: false,
-        error: `Session '${session}' not found`
-      });
-    }
-    
-    // Execute the tmux command
+  // Check if this is a session creation command
+  const isSessionCreation = command.trim().startsWith('new-session');
+  console.log('Is session creation:', isSessionCreation);
+  
+  if (isSessionCreation) {
+    // For session creation, don't validate session exists
     const fullCommand = `tmux ${command}`;
+    console.log('Executing session creation command:', fullCommand);
     exec(fullCommand, (error, stdout, stderr) => {
       if (error) {
         console.error(`tmux command error: ${error.message}`);
+        console.error(`stderr: ${stderr}`);
         return res.status(500).json({
           success: false,
           error: `Command failed: ${stderr || error.message}`
         });
       }
       
+      console.log('Session creation successful:', stdout);
       res.json({
         success: true,
-        message: 'Command executed successfully',
+        message: 'Session created successfully',
         output: stdout
       });
     });
-  });
+  } else {
+    // For other commands, validate session exists
+    exec(`tmux has-session -t ${session} 2>/dev/null`, (error) => {
+      if (error) {
+        return res.status(404).json({
+          success: false,
+          error: `Session '${session}' not found`
+        });
+      }
+      
+      // Execute the tmux command
+      const fullCommand = `tmux ${command}`;
+      exec(fullCommand, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`tmux command error: ${error.message}`);
+          return res.status(500).json({
+            success: false,
+            error: `Command failed: ${stderr || error.message}`
+          });
+        }
+        
+        res.json({
+          success: true,
+          message: 'Command executed successfully',
+          output: stdout
+        });
+      });
+    });
+  }
+});
+
+// Directory autocomplete endpoint
+app.get('/api/directories', (req, res) => {
+  const { path: searchPath = '/', query = '' } = req.query;
+  
+  try {
+    // Ensure the path is safe (prevent directory traversal)
+    const safePath = path.resolve(searchPath);
+    
+    // Check if the path exists and is a directory
+    if (!fs.existsSync(safePath) || !fs.statSync(safePath).isDirectory()) {
+      return res.json({
+        success: true,
+        directories: [],
+        currentPath: searchPath
+      });
+    }
+    
+    // Read directory contents
+    const items = fs.readdirSync(safePath);
+    const directories = [];
+    
+    for (const item of items) {
+      try {
+        const itemPath = path.join(safePath, item);
+        const stats = fs.statSync(itemPath);
+        
+        if (stats.isDirectory()) {
+          // Filter by query if provided
+          if (!query || item.toLowerCase().includes(query.toLowerCase())) {
+            directories.push({
+              name: item,
+              path: itemPath,
+              fullPath: itemPath
+            });
+          }
+        }
+      } catch (error) {
+        // Skip items we can't access
+        continue;
+      }
+    }
+    
+    // Sort directories alphabetically
+    directories.sort((a, b) => a.name.localeCompare(b.name));
+    
+    // If no results and we have a query, try to find partial matches
+    if (directories.length === 0 && query) {
+      // Try to find directories that start with the query
+      for (const item of items) {
+        try {
+          const itemPath = path.join(safePath, item);
+          const stats = fs.statSync(itemPath);
+          
+          if (stats.isDirectory() && item.toLowerCase().startsWith(query.toLowerCase())) {
+            directories.push({
+              name: item,
+              path: itemPath,
+              fullPath: itemPath
+            });
+          }
+        } catch (error) {
+          // Skip items we can't access
+          continue;
+        }
+      }
+    }
+    
+    // Limit results to prevent overwhelming the UI
+    const limitedDirectories = directories.slice(0, 50);
+    
+    res.json({
+      success: true,
+      directories: limitedDirectories,
+      currentPath: safePath,
+      total: directories.length
+    });
+    
+  } catch (error) {
+    console.error('Error reading directory:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to read directory',
+      details: error.message
+    });
+  }
 });
 
 // Error handling middleware

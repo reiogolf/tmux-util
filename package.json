@@ -4,8 +4,8 @@
   "description": "A utility service for tmux operations",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
+    "start": "PORT=3001 node src/server.js",
+    "dev": "PORT=3001 nodemon src/server.js",
     "vpn-detect": "node scripts/find-vpn-ips.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
