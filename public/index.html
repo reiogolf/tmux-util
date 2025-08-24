@@ -27,6 +27,14 @@
             --accent-primary: #667eea;
             --accent-secondary: #764ba2;
             --success-color: #28a745;
+            --success-secondary: #20c997;
+            --success-hover: #218838;
+            --success-secondary-hover: #1ea085;
+            --success-shadow: rgba(40, 167, 69, 0.3);
+            --success-shadow-hover: rgba(40, 167, 69, 0.4);
+            --error-color: #dc3545;
+            --error-secondary: #c82333;
+            --error-shadow: rgba(220, 53, 69, 0.2);
             --warning-color: #ffc107;
             --danger-color: #dc3545;
         }
@@ -53,6 +61,14 @@
             --accent-primary: #667eea;
             --accent-secondary: #764ba2;
             --success-color: #28a745;
+            --success-secondary: #20c997;
+            --success-hover: #218838;
+            --success-secondary-hover: #1ea085;
+            --success-shadow: rgba(40, 167, 69, 0.3);
+            --success-shadow-hover: rgba(40, 167, 69, 0.4);
+            --error-color: #dc3545;
+            --error-secondary: #c82333;
+            --error-shadow: rgba(220, 53, 69, 0.2);
             --warning-color: #ffc107;
             --danger-color: #dc3545;
         }
@@ -79,6 +95,14 @@
             --accent-primary: #007bff;
             --accent-secondary: #0056b3;
             --success-color: #28a745;
+            --success-secondary: #20c997;
+            --success-hover: #218838;
+            --success-secondary-hover: #1ea085;
+            --success-shadow: rgba(40, 167, 69, 0.3);
+            --success-shadow-hover: rgba(40, 167, 69, 0.4);
+            --error-color: #dc3545;
+            --error-secondary: #c82333;
+            --error-shadow: rgba(220, 53, 69, 0.2);
             --warning-color: #ffc107;
             --danger-color: #dc3545;
         }
@@ -105,6 +129,14 @@
             --accent-primary: #ed8936;
             --accent-secondary: #dd6b20;
             --success-color: #38a169;
+            --success-secondary: #2f855a;
+            --success-hover: #2f855a;
+            --success-secondary-hover: #276749;
+            --success-shadow: rgba(56, 161, 105, 0.3);
+            --success-shadow-hover: rgba(56, 161, 105, 0.4);
+            --error-color: #e53e3e;
+            --error-secondary: #c53030;
+            --error-shadow: rgba(229, 62, 62, 0.2);
             --warning-color: #d69e2e;
             --danger-color: #e53e3e;
         }
@@ -131,6 +163,14 @@
             --accent-primary: #667eea;
             --accent-secondary: #764ba2;
             --success-color: #48bb78;
+            --success-secondary: #38a169;
+            --success-hover: #38a169;
+            --success-secondary-hover: #2f855a;
+            --success-shadow: rgba(72, 187, 120, 0.3);
+            --success-shadow-hover: rgba(72, 187, 120, 0.4);
+            --error-color: #f56565;
+            --error-secondary: #e53e3e;
+            --error-shadow: rgba(245, 101, 101, 0.2);
             --warning-color: #ed8936;
             --danger-color: #f56565;
         }
@@ -157,6 +197,14 @@
             --accent-primary: #007bff;
             --accent-secondary: #0056b3;
             --success-color: #28a745;
+            --success-secondary: #20c997;
+            --success-hover: #218838;
+            --success-secondary-hover: #1ea085;
+            --success-shadow: rgba(40, 167, 69, 0.3);
+            --success-shadow-hover: rgba(40, 167, 69, 0.4);
+            --error-color: #dc3545;
+            --error-secondary: #c82333;
+            --error-shadow: rgba(220, 53, 69, 0.2);
             --warning-color: #ffc107;
             --danger-color: #dc3545;
         }
@@ -183,6 +231,14 @@
             --accent-primary: #4299e1;
             --accent-secondary: #3182ce;
             --success-color: #48bb78;
+            --success-secondary: #38a169;
+            --success-hover: #38a169;
+            --success-secondary-hover: #2f855a;
+            --success-shadow: rgba(72, 187, 120, 0.3);
+            --success-shadow-hover: rgba(72, 187, 120, 0.4);
+            --error-color: #f56565;
+            --error-secondary: #e53e3e;
+            --error-shadow: rgba(245, 101, 101, 0.2);
             --warning-color: #ed8936;
             --danger-color: #f56565;
         }
@@ -285,22 +341,22 @@
         }
 
         .status-item:hover {
-            background: rgba(255, 255, 255, 0.9);
+            background: var(--bg-secondary);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px var(--shadow-color);
         }
 
         .status-indicator {
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+            background: linear-gradient(135deg, var(--success-color, #28a745) 0%, var(--success-secondary, #20c997) 100%);
+            box-shadow: 0 0 0 3px var(--success-shadow, rgba(40, 167, 69, 0.2)), inset 0 1px 2px var(--border-light);
         }
 
         .status-indicator.error {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+            background: linear-gradient(135deg, var(--error-color, #dc3545) 0%, var(--error-secondary, #c82333) 100%);
+            box-shadow: 0 0 0 3px var(--error-shadow, rgba(220, 53, 69, 0.2)), inset 0 1px 2px var(--border-light);
         }
 
         .section {
@@ -344,7 +400,8 @@
         .form-control:focus {
             outline: none;
             border-color: var(--input-focus);
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 0 3px var(--accent-primary);
+            opacity: 0.2;
         }
 
         .form-control::placeholder {
@@ -782,7 +839,7 @@
             border: none;
             font-size: 1.2rem;
             cursor: pointer;
-            color: #667eea;
+            color: var(--accent-primary);
             transition: all 0.3s ease;
             padding: 0.5rem;
             border-radius: 50%;
@@ -792,21 +849,21 @@
         }
 
         .header-btn:hover {
-            background: rgba(102, 126, 234, 0.1);
+            background: var(--bg-tertiary);
             transform: scale(1.1);
         }
 
         .refresh-btn {
-            background: rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
             border-radius: 8px;
             font-size: 1.2rem;
             cursor: pointer;
-            color: #667eea;
+            color: var(--accent-primary);
             transition: all 0.3s ease;
             padding: 0.5rem;
             backdrop-filter: blur(10px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 8px var(--shadow-light);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -815,10 +872,10 @@
         }
 
         .refresh-btn:hover {
-            background: rgba(255, 255, 255, 0.9);
+            background: var(--bg-tertiary);
             transform: rotate(180deg) translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            color: #5a6fd8;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            color: var(--accent-secondary);
         }
 
         /* Session Details Panel */
@@ -844,7 +901,7 @@
         .details-header {
             background: var(--input-bg);
             padding: 15px 20px;
-            border-bottom: 2px solid #667eea;
+            border-bottom: 2px solid var(--accent-primary);
             box-shadow: 0 2px 4px var(--shadow-light);
             display: flex;
             justify-content: space-between;
@@ -885,7 +942,8 @@
         .name-value {
             font-family: monospace;
             color: var(--text-primary);
-            background: rgba(102, 126, 234, 0.1);
+            background: var(--accent-primary);
+            opacity: 0.1;
             padding: 2px 6px;
             border-radius: 4px;
             font-size: 0.9rem;
@@ -949,7 +1007,7 @@
             border: none;
             font-size: 1.5rem;
             cursor: pointer;
-            color: #6c757d;
+            color: var(--text-muted);
             padding: 0;
             width: 30px;
             height: 30px;
@@ -961,8 +1019,8 @@
         }
 
         .close-details:hover {
-            background: #e9ecef;
-            color: #495057;
+            background: var(--input-bg);
+            color: var(--text-primary);
         }
 
         .details-content {
@@ -1199,34 +1257,23 @@
             gap: 8px;
             font-size: 1rem;
             padding: 12px 20px;
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            background: linear-gradient(135deg, var(--success-color, #28a745) 0%, var(--success-secondary, #20c997) 100%);
             color: white;
             border: none;
             border-radius: 12px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            box-shadow: 0 4px 15px var(--success-shadow, rgba(40, 167, 69, 0.3));
             text-decoration: none;
             min-width: 140px;
             justify-content: center;
         }
 
         .create-session-btn:hover {
-            background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+            background: linear-gradient(135deg, var(--success-hover, #218838) 0%, var(--success-secondary-hover, #1ea085) 100%);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
-        }
-
-        /* Dark mode adjustments for create session button */
-        [data-theme="dark"] .create-session-btn {
-            background: linear-gradient(135deg, #2d5a2d 0%, #1e4a3a 100%);
-            box-shadow: 0 4px 15px rgba(45, 90, 45, 0.4);
-        }
-
-        [data-theme="dark"] .create-session-btn:hover {
-            background: linear-gradient(135deg, #1e3a1e 0%, #152815 100%);
-            box-shadow: 0 6px 20px rgba(45, 90, 45, 0.5);
+            box-shadow: 0 6px 20px var(--success-shadow-hover, rgba(40, 167, 69, 0.4));
         }
 
         .create-session-btn span {
