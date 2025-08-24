@@ -1128,12 +1128,113 @@
 
         .modal-content {
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             width: 90%;
-            max-width: 400px;
+            max-width: 600px;
             max-height: 90vh;
             overflow: hidden;
+        }
+
+        /* Special styling for create session modal */
+        #createSessionModal .modal-content {
+            max-width: 600px;
+            max-height: 80vh;
+        }
+
+        #createSessionModal .modal-body {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        #createSessionModal .form-group {
+            margin-bottom: 15px;
+        }
+
+        #createSessionModal .form-group label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #createSessionModal .form-group label::before {
+            content: '';
+            width: 3px;
+            height: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        #createSessionModal .form-control {
+            padding: 10px 14px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        #createSessionModal .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        #createSessionModal .form-control::placeholder {
+            color: #adb5bd;
+            font-style: italic;
+        }
+
+        /* Checkbox styling */
+        #createSessionModal .form-group input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+            accent-color: #667eea;
+        }
+
+        #createSessionModal .form-group label[for="modalDetached"] {
+            font-weight: 500;
+            color: #495057;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
+        }
+
+        #createSessionModal .form-group label[for="modalDetached"]:hover {
+            background: #e9ecef;
+        }
+
+        /* Required field indicator */
+        #createSessionModal .form-group label[for="modalSessionName"]::after {
+            content: ' *';
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            #createSessionModal .modal-content {
+                max-width: 95%;
+                margin: 20px;
+            }
+
+            #createSessionModal .modal-body {
+                padding: 20px;
+            }
+
+            .form-section {
+                padding: 15px;
+                margin-bottom: 20px;
+            }
         }
 
         .modal-header {
@@ -1147,6 +1248,22 @@
             margin: 0;
             color: #2c3e50;
             font-size: 1.2rem;
+        }
+
+        /* Enhanced header for create session modal */
+        #createSessionModal .modal-header {
+            padding: 20px 20px 0 20px;
+            border-bottom: 1px solid #e9ecef;
+            margin-bottom: 5px;
+        }
+
+        #createSessionModal .modal-header h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .modal-close {
@@ -1179,6 +1296,21 @@
             display: flex;
             gap: 10px;
             justify-content: flex-end;
+        }
+
+        /* Enhanced footer for create session modal */
+        #createSessionModal .modal-footer {
+            padding: 15px 20px 20px 20px;
+            gap: 12px;
+            border-top: 1px solid #e9ecef;
+            margin-top: 5px;
+            background: #f8f9fa;
+        }
+
+        #createSessionModal .modal-footer .btn {
+            min-width: 100px;
+            padding: 10px 20px;
+            font-weight: 600;
         }
 
         .stream-header {
@@ -1561,28 +1693,28 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label for="modalSessionName">Session Name: *</label>
-                    <input type="text" id="modalSessionName" class="form-control" placeholder="Enter session name" required>
+                    <label for="modalSessionName">Session Name</label>
+                    <input type="text" id="modalSessionName" class="form-control" placeholder="Enter a unique session name" required>
                 </div>
                 <div class="form-group">
-                    <label for="modalWorkingDir">Working Directory:</label>
+                    <label for="modalFriendlyName">Friendly Name</label>
+                    <input type="text" id="modalFriendlyName" class="form-control" placeholder="Display name for the session (optional)">
+                </div>
+                <div class="form-group">
+                    <label for="modalWorkingDir">Working Directory</label>
                     <input type="text" id="modalWorkingDir" class="form-control" placeholder="/path/to/directory (optional)" list="directorySuggestions" autocomplete="off">
                     <datalist id="directorySuggestions"></datalist>
                 </div>
                 <div class="form-group">
-                    <label for="modalStartCommand">Start Command:</label>
+                    <label for="modalStartCommand">Start Command</label>
                     <input type="text" id="modalStartCommand" class="form-control" placeholder="Command to run when session starts (optional)">
                 </div>
                 <div class="form-group">
-                    <label for="modalWindowName">Initial Window Name:</label>
+                    <label for="modalWindowName">Initial Window Name</label>
                     <input type="text" id="modalWindowName" class="form-control" placeholder="Name for the first window (optional)">
                 </div>
                 <div class="form-group">
-                    <label for="modalFriendlyName">Friendly Name:</label>
-                    <input type="text" id="modalFriendlyName" class="form-control" placeholder="Display name for the session (optional)">
-                </div>
-                <div class="form-group">
-                    <label>
+                    <label for="modalDetached">
                         <input type="checkbox" id="modalDetached" checked>
                         Start detached (don't attach to session immediately)
                     </label>
@@ -2693,6 +2825,9 @@
             if (workingDirInput) {
                 workingDirInput.addEventListener('input', handleDirectoryInput);
                 workingDirInput.addEventListener('focus', () => loadDirectorySuggestions(''));
+                
+                // Add event listener for when user selects an option from datalist
+                workingDirInput.addEventListener('change', handleDirectorySelection);
             }
         }
 
@@ -2709,6 +2844,22 @@
             directorySearchTimeout = setTimeout(() => {
                 loadDirectorySuggestions(query);
             }, 300);
+        }
+
+        // Handle directory selection from datalist
+        function handleDirectorySelection(event) {
+            const selectedValue = event.target.value;
+            
+            // If the selected value doesn't end with '/', add it
+            if (selectedValue && !selectedValue.endsWith('/')) {
+                event.target.value = selectedValue + '/';
+                
+                // Trigger input event to load suggestions for the new path
+                setTimeout(() => {
+                    const inputEvent = new Event('input', { bubbles: true });
+                    event.target.dispatchEvent(inputEvent);
+                }, 100);
+            }
         }
 
         // Load directory suggestions
