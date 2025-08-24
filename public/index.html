@@ -2130,8 +2130,8 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label for="modalFriendlyName">Friendly Name:</label>
-                    <input type="text" id="modalFriendlyName" class="form-control" placeholder="Enter friendly name">
+                    <label for="modalEditFriendlyName">Friendly Name:</label>
+                    <input type="text" id="modalEditFriendlyName" class="form-control" placeholder="Enter friendly name">
                 </div>
             </div>
             <div class="modal-footer">
@@ -3050,7 +3050,7 @@
         // Open edit friendly name modal
         function openEditFriendlyNameModal(sessionName, currentName) {
             const modal = document.getElementById('editFriendlyNameModal');
-            const input = document.getElementById('modalFriendlyName');
+            const input = document.getElementById('modalEditFriendlyName');
             
             // Store the session data for use in the edit function
             editFriendlyNameData = { sessionName };
@@ -3075,7 +3075,7 @@
         // Close edit friendly name modal
         function closeEditFriendlyNameModal() {
             const modal = document.getElementById('editFriendlyNameModal');
-            const input = document.getElementById('modalFriendlyName');
+            const input = document.getElementById('modalEditFriendlyName');
             
             modal.classList.remove('show');
             input.value = '';
@@ -3090,7 +3090,7 @@
             }
             
             const { sessionName } = editFriendlyNameData;
-            const newName = document.getElementById('modalFriendlyName').value.trim();
+            const newName = document.getElementById('modalEditFriendlyName').value.trim();
             
             if (newName === '') {
                 // Remove friendly name
