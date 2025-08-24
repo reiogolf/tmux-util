@@ -2249,6 +2249,13 @@
             // Add keyboard support for closing panels
             document.addEventListener('keydown', function(event) {
                 if (event.key === 'Escape') {
+                    // Check if any modal is open first
+                    const openModal = document.querySelector('.modal.show');
+                    if (openModal) {
+                        // Let the modal's own ESC handler deal with it
+                        return;
+                    }
+                    // Only close panels if no modal is open
                     closeTopPanel();
                 }
             });
